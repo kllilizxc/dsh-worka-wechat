@@ -3,6 +3,18 @@ import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {LocalMcp} from '../src/source';
+import {providerRuntime} from '../src/subprocess';
+import {PassThrough} from 'node:stream';
+test('provider uses one DSH-owned process range without a second host sandbox',async()=>{
+  const stdin=new PassThrough(),stdout=new PassThrough();let spec:any,terminated=false,drained=false;
+  const runtime=providerRuntime({spawn:(input:any)=>{
+    spec=input;return {stdin,stdout,done:Promise.resolve({exitCode:0}),terminate:()=>{terminated=true;},waitForExit:async()=>{drained=true;return true;}} as any;
+  }});
+  const child=await runtime.subprocess.spawn({command:'/usr/bin/sandbox-exec',args:['-p','(deny network*)','/test/python'],cwd:'/test/mcp',env:{PYTHONDONTWRITEBYTECODE:'1'}});
+  await child.stdin.write('request\n');expect(stdin.read().toString()).toBe('request\n');
+  expect(spec.argv).toEqual(['/usr/bin/sandbox-exec','-p','(deny network*)','/test/python']);expect(spec.stdio).toEqual({stdin:'pipe',stdout:'pipe',stderr:'pipe'});
+  expect((await child.wait()).code).toBe(0);await child.kill('SIGTERM');expect(terminated&&drained).toBe(true);
+});
 test('only bounded read tools; OS sandbox covers MCP/CLI; split UTF-8 and orderly process cleanup',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'wechat-source-'));const config=join(dir,'config.json');await writeFile(config,JSON.stringify({python:'/test/python',project:'/test/mcp'}));
   let listen:(chunk:Uint8Array)=>void=()=>{};let exit!:()=>void;let spec:any,killed=false;

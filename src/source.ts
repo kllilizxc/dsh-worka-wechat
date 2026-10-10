@@ -20,7 +20,7 @@ export class LocalMcp implements Reader {
   private sequence=0;
   private buffer='';
   private closed=false;
-  constructor(private runtime:RuntimeHost,private bridge:string,private configFile=resolve(homedir(),'.config/worka-wechat/runtime.json')){}
+  constructor(private runtime:Pick<RuntimeHost,'subprocess'>,private bridge:string,private configFile=resolve(homedir(),'.config/worka-wechat/runtime.json')){}
   private fail() {
     this.ready?.reject(new Error(READ_ERROR));this.ready=undefined;
     for(const entry of this.pending.values())entry.reject(new Error(READ_ERROR));
@@ -56,7 +56,8 @@ export class LocalMcp implements Reader {
       };
       if(child.stdout.onData)this.stops.push(child.stdout.onData(onData));
       else {child.stdout.on?.('data',onData);this.stops.push(()=>{child.stdout.off?.('data',onData);});}
-      void child.wait().then(()=>{if(this.child===child){this.child=undefined;this.starting=undefined;this.fail();for(const stop of this.stops.splice(0))stop();this.buffer='';}});
+      const stopped=()=>{if(this.child===child){this.child=undefined;this.starting=undefined;this.fail();for(const stop of this.stops.splice(0))stop();this.buffer='';}};
+      void child.wait().then(stopped,stopped);
       const timeout=setTimeout(()=>{this.fail();void child.kill('SIGTERM');},35_000);
       try{await ready;}finally{clearTimeout(timeout);}
     })().catch(()=>{this.starting=undefined;throw new Error(READ_ERROR);});

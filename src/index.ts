@@ -2,11 +2,12 @@ import {dirname,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {WechatBackend} from './backend';
 import {LocalMcp} from './source';
+import {providerRuntime} from './subprocess';
 export const name='dsh-worka-wechat';
-export const inject=['worka','skills'];
+export const inject=['worka','skills','subprocess'];
 export async function apply(ctx:any,config:{runtimeConfig?:string}={}){
   const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-  const backend=new WechatBackend(ctx.worka,new LocalMcp(ctx.worka.runtime,resolve(root,'bridge/mcp_bridge.py'),config.runtimeConfig));
+  const backend=new WechatBackend(ctx.worka,new LocalMcp(providerRuntime(ctx.subprocess),resolve(root,'bridge/mcp_bridge.py'),config.runtimeConfig));
   backend.template=resolve(root,'template');
   try{
     await backend.start();const dispose=await ctx.worka.register('wechat',backend);ctx.effect(()=>dispose,'WeChat read-only backend');

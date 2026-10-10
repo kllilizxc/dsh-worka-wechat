@@ -9,5 +9,5 @@
   "dsh": {"bundle": {"patch": "cordis.patch.yml"}},
   "scripts": {"build": "bun scripts/build.ts", "prepack": "bun run build", "check": "bun test tests/backend.test.ts tests/source.test.ts"},
   "engines": {"node": ">=24"},
-  "peerDependencies": {"@realiz3r/worka": ">=0.3.0 <0.4.0"}
+  "peerDependencies": {"@realiz3r/worka": ">=0.3.0 <0.4.0", "@deepseek-ai/dsh-subprocess": ">=0.2.0-rc.2 <0.3.0"}
 }
