@@ -1,3 +1,8 @@
+---
+name: worka-wechat-local-view
+description: View selected WeChat conversations locally with read-only controls.
+---
+
 # 微信便笺
 
 只读本机微信文字消息，最多跟踪 20 个会话，每个会话保存最近 200 条。

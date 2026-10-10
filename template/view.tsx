@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
 import {Button,SearchField,ScrollShadow} from '@heroui/react';
 import {useNote,withNotePrerequisites,NoteIcon,NoteGuidance} from '@dsh-workbench/react';
 import type {Chat,Message} from './model';
@@ -7,6 +7,27 @@ import './style.css';
 
 const text=(message:Message|null)=>message?(message.text||`[${({image:'图片',voice:'语音',video:'视频',sticker:'表情',file:'文件'} as Record<string,string>)[message.kind]??'非文字消息'}]`):'尚未读取消息';
 const clock=(time:number)=>new Date(time*1000).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+
+function MessageList({children}:{children:ReactNode}){
+  const viewport=useRef<HTMLDivElement>(null);
+  const content=useRef<HTMLDivElement>(null);
+  const following=useRef(true);
+  const keepLatest=()=>{
+    const node=viewport.current;
+    if(node&&node.clientHeight>0&&following.current)node.scrollTop=node.scrollHeight;
+  };
+  useLayoutEffect(keepLatest);
+  useLayoutEffect(()=>{
+    const observer=new ResizeObserver(keepLatest);
+    observer.observe(viewport.current!);
+    observer.observe(content.current!);
+    return ()=>observer.disconnect();
+  },[]);
+  return <ScrollShadow ref={viewport} className="message-list" onScroll={event=>{
+    const node=event.currentTarget;
+    if(node.clientHeight>0)following.current=node.scrollHeight-node.clientHeight-node.scrollTop<=2;
+  }}><div ref={content} style={{display:'flow-root'}}>{children}</div></ScrollShadow>;
+}
 
 function View(){
   const {metadata,mode,host,actions,useQuery,focus}=useNote<typeof import('./actions')>();
@@ -69,12 +90,12 @@ function View(){
       <ScrollShadow className="chat-list" aria-label="正在跟踪的会话">{chats.map(row=><Button key={row.id} variant={chat?.id===row.id?'secondary':'ghost'} className="chat-row" onPress={()=>setSelected(row.id)}><span className="chat-avatar" aria-hidden="true">{row.type==='group'?'群':'聊'}</span><span className="chat-row-text"><strong>{row.name}</strong><span>{text(row.latest)}</span></span>{row.latest&&<time>{clock(row.latest.time)}</time>}</Button>)}</ScrollShadow>
       <article className="conversation">
         <header className="conversation-header"><Button className="back-chats" variant="ghost" onPress={()=>setSelected(null)}>返回会话</Button><div><h1>{chat?.name}</h1><p>{chat?.type==='group'?'群聊':'私聊'} · 最近 {messages.data?.messages.length??0} 条 · 只读</p></div></header>
-        <ScrollShadow className="message-list">
+        <MessageList key={`${chat?.id}:${selected??''}`}>
           {messages.loading&&!messages.data&&<p role="status">正在读取消息…</p>}
           {messages.error&&<p role="alert">{messages.error.message}</p>}
           {!messages.loading&&!messages.error&&!messages.data?.messages.length&&<p className="message-empty">尚未获取文字消息。开始读取后，会自动显示这里的新消息。</p>}
           {messages.data?.messages.map(row=><div key={row.id} className={'message '+(row.fromMe?'from-me':'')}><div className="message-meta"><span>{row.fromMe?'我':row.sender||'对方'}</span><time dateTime={new Date(row.time*1000).toISOString()}>{new Date(row.time*1000).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</time></div><div className="message-body">{text(row)}</div></div>)}
-        </ScrollShadow>
+        </MessageList>
       </article>
     </div>}
   </section>;
