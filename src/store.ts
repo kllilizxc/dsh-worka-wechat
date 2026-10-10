@@ -3,9 +3,10 @@ import {resolve} from 'node:path';
 import {randomUUID} from 'node:crypto';
 
 export type Chat={id:string;name:string;type:'private'|'group'};
-export type Message={id:string;time:number;sender:string;text:string;kind:string;fromMe:boolean};
-export type ChatState={chat:Chat;cursor?:string;messages:Message[]};
-export type Connection={noteId:string|null;enabled:boolean;identity:string|null;chats:ChatState[];error:string|null};
+export type Handling={status:'followed'|'skipped';reason:string;task?:{noteId:string;objectId:string};recordedAt:number};
+export type Message={id:string;time:number;sender:string;text:string;kind:string;fromMe:boolean;handling?:Handling};
+export type ChatState={chat:Chat;cursor?:string;messages:Message[];pending?:Message[]};
+export type Connection={noteId:string|null;enabled:boolean;identity:string|null;chats:ChatState[];error:string|null;routing?:{enabled:boolean;since:number}};
 export const empty=():Connection=>({noteId:null,enabled:false,identity:null,chats:[],error:null});
 
 /** One bounded private snapshot: messages and cursor publish in the same atomic rename. */
@@ -41,6 +42,6 @@ export function normalize(raw:any):Message {
     text:typeof raw.text==='string'?raw.text.slice(0,16_000):'',kind:String(raw.kind??'unknown'),fromMe:raw.is_from_me===true};
 }
 export function merge(old:Message[],incoming:Message[]):Message[]{
-  const byId=new Map(old.map(row=>[row.id,row]));for(const row of incoming)byId.set(row.id,row);
+  const byId=new Map(old.map(row=>[row.id,row]));for(const row of incoming)byId.set(row.id,{...row,...(byId.get(row.id)?.handling?{handling:byId.get(row.id)!.handling}:{})});
   return [...byId.values()].sort((a,b)=>a.time-b.time||Number(a.id)-Number(b.id)).slice(-200);
 }

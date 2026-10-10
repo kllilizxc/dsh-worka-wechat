@@ -20,14 +20,15 @@ class FakeReader implements Reader {
 }
 async function setup(){
   const dir=await mkdtemp(join(tmpdir(),'wechat-unit-'));dirs.push(dir);
-  const reader=new FakeReader();const metadata=new Map();let paused=false,desktop=true;
+  const reader=new FakeReader();const metadata=new Map();const published:any[]=[];let paused=false,desktop=true;
   const host:any={dataRoot:dir,app:{records:()=>({read:async(key:string)=>metadata.get(key),write:async(key:string,value:any)=>{metadata.set(key,{value});}}),
-    core:{getNote:async()=>({value:{id:'note',desktopId:'desktop',followingPaused:paused}}),desktopRunnable:async()=>desktop},
+    publishNodeEvent:async(input:any)=>{published.push(input);return {id:'event',duplicate:false};},
+    core:{getNote:async()=>({value:{id:'note',codeVersion:'fixture-v1',desktopId:'desktop',followingPaused:paused}}),desktopRunnable:async()=>desktop},
     synchronizers:{refresh:async()=>{await backend.tick();}}}};
   const backend=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')));await backend.start();
   const user={kind:'user' as const,noteId:'note'};
   await backend.invoke('bind',{},user);await backend.invoke('select',{chats:[chat]},user);await backend.invoke('enable',{enabled:true},user);
-  return {dir,reader,backend,host,user,metadata,setPaused:(value:boolean)=>{paused=value;},setDesktop:(value:boolean)=>{desktop=value;}};
+  return {dir,reader,backend,host,user,metadata,published,setPaused:(value:boolean)=>{paused=value;},setDesktop:(value:boolean)=>{desktop=value;}};
 }
 test('cursor and messages commit atomically; overlapping pages deduplicate; restart resumes persisted cursor',async()=>{
   const {dir,reader,backend,host}=await setup();await backend.tick();
@@ -91,4 +92,58 @@ test('parallel refreshes share ingestion; cancellation leaves the last committed
   expect(first).toBe(second);await ready;abort.abort();await expect(first).rejects.toThrow('cancelled');
   expect(backend.store.value.chats[0]!.cursor).toBe('c1');expect(backend.store.value.error).toBeNull();
   reader.call=original;reader.events=[row(2)];reader.cursor='c2';await backend.tick();expect(backend.store.value.chats[0]!.messages).toHaveLength(2);
+});
+
+const future=(id:number)=>({...row(id),create_time:Math.ceil(Date.now()/1000)+1});
+const context={scope:{noteId:'note'}} as any;
+test('AI defaults off; opt-in opens only selected-chat relation queries and keeps UI discovery private',async()=>{
+  const {backend,user,published}=await setup();await backend.tick();
+  expect(await backend.resources.routing!.load({},context)).toEqual({enabled:false,since:0});
+  await expect(backend.resources.context!.load({id:chat.id},context)).rejects.toThrow('授权');
+  expect(published).toHaveLength(0);
+  await backend.invoke('autoConfigure',{enabled:true},user);
+  expect((await backend.resources.context!.load({id:chat.id},context) as any).messages).toHaveLength(1);
+  await expect(backend.resources.context!.load({id:'unselected'},context)).rejects.toThrow('选择');
+  expect(await backend.beforeNativeTool({name:'workbench',arguments:{method:'connection.nodeQuery',input:{noteId:'note',name:'context'}}})).toBeUndefined();
+  expect(await backend.beforeNativeTool({name:'workbench',arguments:{method:'note.query',input:{noteId:'note',name:'sessions'}}})).toContain('本机');
+  expect((await backend.noteContext({id:'note'}))[0]).toContain('用户已授权');
+});
+test('only new opted-in text messages publish; baseline, old catch-up and duplicate pages do not',async()=>{
+  const {backend,user,reader,published,metadata}=await setup();await backend.tick();
+  await backend.invoke('autoConfigure',{enabled:true},user);
+  reader.events=[row(1),row(2),future(3),{...future(4),kind:'image'}];reader.cursor='c2';await backend.tick();await backend.tick();
+  expect(published).toHaveLength(1);expect(published[0]).toMatchObject({noteId:'note',codeVersion:'fixture-v1',name:'items.changed',payload:{itemId:chat.id,messageId:'3'}});
+  expect(JSON.stringify(published)).not.toContain('合成文字');expect(JSON.stringify([...metadata.values()])).not.toContain('合成');
+  expect(backend.store.value.chats[0]!.pending).toEqual([]);
+});
+test('failed publication persists with cursor; restart retries the same event before ingesting more',async()=>{
+  const {backend,user,reader,host,dir,published}=await setup();await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  const publish=host.app.publishNodeEvent;host.app.publishNodeEvent=async()=>{throw Error('delivery interrupted');};
+  reader.events=[future(2)];reader.cursor='c2';await expect(backend.tick()).rejects.toThrow('delivery interrupted');
+  expect(backend.store.value.chats[0]!.cursor).toBe('c2');expect(backend.store.value.chats[0]!.pending?.map(m=>m.id)).toEqual(['2']);
+  await backend.invoke('autoConfigure',{enabled:true},{...user,kind:'agent'});
+  expect(backend.store.value.chats[0]!.pending?.map(m=>m.id)).toEqual(['2']);
+  host.app.publishNodeEvent=publish;
+  const reopened=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')));await reopened.start();await reopened.tick();await reopened.tick();
+  expect(published).toHaveLength(1);expect(published[0].key).toBe(`wechat:${JSON.stringify([chat.id,'2'])}`);
+  expect(reopened.store.value.chats[0]!.pending).toEqual([]);
+});
+test('handling belongs to its source message, survives repeated ingestion and never publishes another event',async()=>{
+  const {backend,user,reader,published}=await setup();await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  reader.events=[future(2)];await backend.tick();
+  const relation={kind:'action' as const,noteId:'note',skillCause:{chain:['relation']}};
+  const input={id:chat.id,messageId:'2',status:'followed',reason:'已保存待办并交办',task:{noteId:'desk',objectId:'task'}};
+  await expect(backend.invoke('recordHandling',input,{...user,kind:'agent'})).rejects.toThrow('连线');
+  await expect(backend.invoke('recordHandling',{...input,messageId:'other'},relation)).rejects.toThrow('不属于');
+  await backend.invoke('recordHandling',input,relation);await backend.tick();
+  expect(backend.store.value.chats[0]!.messages.at(-1)?.handling).toMatchObject({status:'followed',reason:input.reason,task:input.task});
+  expect(published).toHaveLength(1);
+  await backend.invoke('recordHandling',{...input,status:'skipped',reason:'没有新增要求'},relation);
+  expect(backend.store.value.chats[0]!.messages.at(-1)?.handling?.task).toBeUndefined();
+});
+test('pausing AI keeps ingestion, drops pending automation and re-enabling does not replay that history',async()=>{
+  const {backend,user,reader,published}=await setup();await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  await backend.invoke('autoConfigure',{enabled:false},user);reader.events=[future(2)];await backend.tick();
+  expect(backend.store.value.chats[0]!.messages).toHaveLength(2);expect(published).toHaveLength(0);
+  await backend.invoke('autoConfigure',{enabled:true},user);await backend.tick();expect(published).toHaveLength(0);
 });
