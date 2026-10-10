@@ -3,7 +3,7 @@
   "icon":{"type":"emoji","value":"💬"},"compatibility":{"worka":">=0.3.0 <0.4.0"},
   "backend":{"packageName":"dsh-worka-wechat","build":true},"capabilities":["wechat"],
   "initialState":"template/initial-state.json",
-  "files":["template/worka-note.json","template/package.json","template/model.ts","template/actions.ts","template/view.tsx","template/style.css","template/SKILL.md","template/README.md"],
+  "files":["template/worka-note.json","template/worka-source.json","template/package.json","template/model.ts","template/actions.ts","template/view.tsx","template/style.css","template/SKILL.md","template/README.md"],
   "requirements":["先验证本机微信兼容性。保持 SIP 开启，不保存管理员密码。","准备持久的本机运行组件和 0600 runtime.json；不执行上游自动初始化或升级。"],
   "verification":["确认 code.get.status=ready。","在本机界面选择会话，检查自动读取、暂停/恢复和重启续读；真实验证仅输出脱敏计数。"]
 }
