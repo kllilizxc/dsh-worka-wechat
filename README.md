@@ -4,6 +4,7 @@
 
 数据链路：Worka 后台同步 → DSH 管理的本机沙箱进程 → wechat-local-agent-mcp → wechat-cli → 微信本地数据库。
 便笺只读取已选私聊和群聊，默认每 5 秒一次。MCP 仅走 stdio，进程与子进程禁止联网。
+插件直接使用 DSH 的 subprocess 服务管理进程范围和退出清理，再施加一层禁网沙箱；避免 macOS 拒绝嵌套沙箱。
 
 本机配置 `~/.config/worka-wechat/runtime.json` 必须为 0600，包含 `python`、`project`（MCP 源码）、`cli`、`wcdb`、`metadata_state` 的绝对路径。运行文件不得位于临时目录。数据库密钥由已审核的本机组件保存在 `~/.config/wxcli/config.json`，不进入本仓库。配置、聊天内容、联系人和日志不得提交、上传或注入模型上下文。
 
