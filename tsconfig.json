@@ -1,0 +1,1 @@
+{"extends": "../../dsh-workbench/tsconfig.json", "compilerOptions": {"paths": {"@realiz3r/worka/host": ["../../dsh-workbench/src/host.ts"]}}, "include": ["src", "template", "tests"], "exclude": []}

@@ -1,0 +1,13 @@
+{
+  "name": "dsh-worka-wechat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "本机微信只读便笺",
+  "exports": {".": "./dist/index.js", "./package.json": "./package.json"},
+  "files": ["dist", "bridge", "template", "worka.json", "cordis.patch.yml", "README.md"],
+  "dsh": {"bundle": {"patch": "cordis.patch.yml"}},
+  "scripts": {"build": "bun scripts/build.ts", "prepack": "bun run build", "check": "bun test tests/backend.test.ts tests/source.test.ts"},
+  "engines": {"node": ">=24"},
+  "peerDependencies": {"@realiz3r/worka": ">=0.3.0 <0.4.0"}
+}

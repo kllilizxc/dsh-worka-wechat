@@ -1,0 +1,6 @@
+{
+  "schemaVersion":1,"name":"微信","scenarios":"在本机查看已选私聊和群聊的新文字消息。",
+  "icon":{"type":"emoji","value":"💬"},
+  "files":["package.json","model.ts","actions.ts","view.tsx","style.css","SKILL.md","README.md"],
+  "onboarding":{"title":"选择要跟踪的微信会话","description":"这台 Mac 的微信需要保持登录。","steps":["展开便笺，点“选择会话”并勾选私聊或群聊。","点“开始读取”。暂停后保留已读消息，恢复时接着读取。"]}
+}
