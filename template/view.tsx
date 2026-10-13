@@ -2,6 +2,7 @@ import {useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
 import {Button,SearchField,ScrollShadow} from '@heroui/react';
 import {useNote,withNotePrerequisites,NoteIcon,NoteGuidance} from '@dsh-workbench/react';
 import type {Chat,Message} from './model';
+import {TaskResult} from './task';
 import '@heroui/styles/css';
 import './style.css';
 
@@ -40,14 +41,16 @@ function View(){
   const [error,setError]=useState('');
   useEffect(()=>{if(focus==='sessions'&&mode==='expanded')setManaging(true);},[focus,mode]);
   const inbox=useQuery('inbox',{});
+  const routing=useQuery('routing',{});
   const data=inbox.data;
   const chats=data?.chats??[];
   const chat=chats.find(row=>row.id===selected)??chats[0];
   const messages=useQuery('messages',{chatId:chat?.id??''},{enabled:mode==='expanded'&&!managing&&!!chat});
+  const related=useQuery('related',{id:chat?.id??''},{enabled:mode==='expanded'&&!managing&&!!chat});
   const sessions=useQuery('sessions',{keyword,offset},{enabled:mode==='expanded'&&managing});
   const enabled=data?.enabled===true;
   const status=data?.paused?'便笺已暂停':data?.error?'读取受阻':enabled?'自动读取中':'读取已暂停';
-  const failure=error||inbox.error?.message||data?.error||'';
+  const failure=error||inbox.error?.message||routing.error?.message||data?.error||'';
   const chosen=pending??chats.map(({id,name,type})=>({id,name,type}));
   const run=async(work:()=>Promise<unknown>)=>{setBusy(true);setError('');try{await work();}catch(cause){setError(cause instanceof Error?cause.message:'操作失败，请重试。');}finally{setBusy(false);}};
   const manage=()=>{setPending(null);setManaging(true);};
@@ -69,6 +72,7 @@ function View(){
       <span className={'wechat-status '+(failure?'error':'')}>{status}</span>
       <Button variant="ghost" isDisabled={busy} onPress={()=>run(()=>actions.setEnabled({enabled:!enabled}))}>{enabled?'暂停读取':'恢复读取'}</Button>
       <Button variant="ghost" isDisabled={busy||!enabled||data?.paused||!chats.length} onPress={()=>run(()=>actions.refresh({}))}>立即检查</Button>
+      <Button variant="ghost" isDisabled={busy||routing.loading||!!routing.error} onPress={()=>run(()=>actions.autoConfigure({enabled:routing.data?.enabled!==true}))}>{routing.data?.enabled?'暂停 AI 处理':'开启 AI 处理'}</Button>
       <Button variant="secondary" isDisabled={busy} onPress={manage}>选择会话</Button>
     </div></header>
     {failure&&<div className="wechat-error" role="alert"><span>{failure}</span><Button size="sm" variant="ghost" isDisabled={busy} onPress={()=>run(async()=>{await actions.refresh({});await inbox.refresh();})}>重试</Button></div>}
@@ -93,8 +97,9 @@ function View(){
         <MessageList key={`${chat?.id}:${selected??''}`}>
           {messages.loading&&!messages.data&&<p role="status">正在读取消息…</p>}
           {messages.error&&<p role="alert">{messages.error.message}</p>}
+          {related.error&&<p role="alert">关联任务结果暂时无法读取。<Button variant="ghost" onPress={()=>void related.refresh()}>重试</Button></p>}
           {!messages.loading&&!messages.error&&!messages.data?.messages.length&&<p className="message-empty">尚未获取文字消息。开始读取后，会自动显示这里的新消息。</p>}
-          {messages.data?.messages.map(row=><div key={row.id} className={'message '+(row.fromMe?'from-me':'')}><div className="message-meta"><span>{row.fromMe?'我':row.sender||'对方'}</span><time dateTime={new Date(row.time*1000).toISOString()}>{new Date(row.time*1000).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</time></div><div className="message-body">{text(row)}</div></div>)}
+          {messages.data?.messages.map(row=><div key={row.id} className={'message '+(row.fromMe?'from-me':'')}><div className="message-meta"><span>{row.fromMe?'我':row.sender||'对方'}</span><time dateTime={new Date(row.time*1000).toISOString()}>{new Date(row.time*1000).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</time></div><div className="message-body">{text(row)}</div>{row.handling&&<p className="message-handling"><strong>{row.handling.status==='followed'?'已跟进':'已略过'}</strong> · {row.handling.reason}</p>}{related.data?.filter(task=>task.messageIds.at(-1)===row.id).map(task=><TaskResult key={JSON.stringify([task.noteId,task.delegationId])} task={task}/>)}</div>)}
         </MessageList>
       </article>
     </div>}

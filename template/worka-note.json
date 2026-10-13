@@ -1,6 +1,29 @@
 {
-  "schemaVersion":1,"name":"微信","scenarios":"在本机查看已选私聊和群聊的新文字消息。",
-  "icon":{"type":"emoji","value":"💬"},
-  "files":["worka-source.json","package.json","model.ts","actions.ts","view.tsx","style.css","SKILL.md","README.md"],
-  "onboarding":{"title":"准备后台并选择微信会话","description":"需要 macOS arm64、Worka 0.3 和已配置的 dsh-worka-wechat 本机后台。微信需保持登录；每个宿主仅支持一个微信便笺。","steps":["按 README 安装并配置读取后台；市场只添加便笺界面。","市场安装后便笺默认暂停，通过 Worka 的恢复入口启用。","展开便笺，点“选择会话”，勾选私聊或群聊后点“保存并读取”。"]}
+  "onboarding": {
+    "title": "准备后台并选择微信会话",
+    "description": "需要 macOS arm64、Worka 0.3 和已配置的 dsh-worka-wechat 本机后台。微信需保持登录；每个宿主仅支持一个微信便笺。",
+    "steps": [
+      "按 README 安装并配置读取后台；市场只添加便笺界面。",
+      "市场安装后便笺默认暂停，通过 Worka 的恢复入口启用。",
+      "展开便笺，点“选择会话”，勾选私聊或群聊后点“保存并读取”。"
+    ]
+  },
+  "schemaVersion": 1,
+  "name": "微信",
+  "scenarios": "在本机查看已选私聊和群聊的新文字消息。",
+  "icon": {
+    "type": "emoji",
+    "value": "💬"
+  },
+  "files": [
+    "worka-source.json",
+    "package.json",
+    "model.ts",
+    "actions.ts",
+    "view.tsx",
+    "task.tsx",
+    "style.css",
+    "SKILL.md",
+    "README.md"
+  ]
 }
