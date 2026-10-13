@@ -22,7 +22,7 @@ async function setup(){
   const dir=await mkdtemp(join(tmpdir(),'wechat-unit-'));dirs.push(dir);
   const reader=new FakeReader();const metadata=new Map();let paused=false,desktop=true;
   const host:any={dataRoot:dir,app:{records:()=>({read:async(key:string)=>metadata.get(key),write:async(key:string,value:any)=>{metadata.set(key,{value});}}),
-    core:{getNote:async()=>({value:{id:'note',desktopId:'desktop',followingPaused:paused}}),desktopRunnable:async()=>desktop},
+    core:{getNote:async()=>({value:{id:'note',desktopId:'desktop',followingPaused:paused,codeVersion:'fixture-code'}}),desktopRunnable:async()=>desktop},
     synchronizers:{refresh:async()=>{await backend.tick();}}}};
   const backend=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')));await backend.start();
   const user={kind:'user' as const,noteId:'note'};
@@ -92,3 +92,52 @@ test('parallel refreshes share ingestion; cancellation leaves the last committed
   expect(backend.store.value.chats[0]!.cursor).toBe('c1');expect(backend.store.value.error).toBeNull();
   reader.call=original;reader.events=[row(2)];reader.cursor='c2';await backend.tick();expect(backend.store.value.chats[0]!.messages).toHaveLength(2);
 });
+
+test('only incoming text and own filehelper text publish; outgoing private/group text remains locally visible',async()=>{
+  const {backend,reader,host,user}=await setup();const events:any[]=[];
+  host.app.publishNodeEvent=async(event:any)=>{events.push(event);};
+  const group={id:'synthetic-group@chatroom',name:'文件传输助手',type:'group' as const};
+  const helper={id:'filehelper',name:'合成改名助手',type:'private' as const};
+  await backend.invoke('select',{chats:[{...chat,name:'文件传输助手'},group,helper]},user);
+  await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  const now=Math.ceil(Date.now()/1000);
+  reader.events=[{...row(2),create_time:now,is_from_me:false},{...row(3),create_time:now,is_from_me:true},{...row(4),create_time:now,kind:'image',is_from_me:true}];
+  await backend.tick();await backend.tick();
+  expect(events.map(e=>[e.payload.itemId,e.payload.messageId])).toEqual([[chat.id,'2'],[group.id,'2'],['filehelper','2'],['filehelper','3']]);
+  expect(backend.store.value.chats.every(c=>c.messages.some(m=>m.id==='3'&&m.fromMe))).toBe(true);
+});
+
+test('restart discards legacy pending outgoing text but retains retry identity for eligible messages',async()=>{
+  const {backend,reader,host,dir,user}=await setup();await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  const seen:any[]=[];let fail=true;host.app.publishNodeEvent=async(event:any)=>{seen.push(event);if(fail)throw Error('publish failed');};
+  await backend.store.transaction(value=>{value.chats[0]!.pending=[{id:'old-own',time:1,sender:'合成本人',text:'不触发',kind:'text',fromMe:true},{id:'old-incoming',time:1,sender:'合成发送人',text:'应重试',kind:'text',fromMe:false}];});
+  await expect(backend.tick()).rejects.toThrow('publish failed');
+  expect(backend.store.value.chats[0]!.pending?.map(m=>m.id)).toEqual(['old-incoming']);
+  fail=false;const reopened=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')));await reopened.start();await reopened.tick();
+  expect(seen.map(e=>e.payload.messageId)).toEqual(['old-incoming','old-incoming']);expect(seen[0].key).toBe(seen[1].key);
+  expect(reopened.store.value.chats[0]!.pending).toEqual([]);
+});
+
+test('record feedback survives reingestion without publishing an additional event',async()=>{
+  const {backend,reader,host,user}=await setup();const events:any[]=[];host.app.publishNodeEvent=async(event:any)=>{events.push(event);};
+  await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  reader.events=[{...row(2),create_time:Math.ceil(Date.now()/1000)}];await backend.tick();
+  const result=await backend.invoke('recordHandling',{id:chat.id,messageId:'2',status:'followed',reason:'合成任务已交办',task:{noteId:'execution',objectId:'synthetic-task'}},user);
+  await backend.tick();expect(events).toHaveLength(1);
+  if(!('handling' in result))throw Error('Missing handling receipt');
+  expect(backend.store.value.chats[0]!.messages.find(m=>m.id==='2')!.handling).toEqual(result.handling);
+});
+
+ test('related results use only selected chat task references, deduplicate and read current public results',async()=>{
+  const {backend,host,user}=await setup();await backend.tick();
+  await backend.store.transaction(value=>{const first=value.chats[0]!.messages[0]!;first.handling={status:'followed',reason:'合成交办',task:{noteId:'desk',objectId:'bound-task'},recordedAt:1};value.chats[0]!.messages.push({...first,id:'2'});});
+  const reads:any[]=[];let reply='合成第一轮回答';
+  const ctx:any={scope:{noteId:'note'},read:async(request:any)=>{reads.push(request);return {delegationId:'bound-task',title:'合成任务',status:'completed',archived:false,summary:'合成结论',replySuggestion:reply,revision:reply};}};
+  const load=backend.resources.related!.load;
+  expect(await load({id:chat.id},ctx)).toEqual([{noteId:'desk',messageIds:['1','2'],delegationId:'bound-task',title:'合成任务',status:'completed',archived:false,summary:'合成结论',replySuggestion:reply,revision:reply}]);
+  expect(reads).toEqual([{name:'note.query',input:{noteId:'desk',name:'result',input:{delegationId:'bound-task'}}}]);
+  reply='合成更新回答';expect((await load({id:chat.id},ctx) as any)[0].replySuggestion).toBe(reply);
+  await expect(load({id:'unselected',noteId:'attacker',delegationId:'other'},ctx)).rejects.toThrow('请先选择');
+  await expect(load({id:chat.id},{...ctx,scope:{noteId:'other'}})).rejects.toThrow('所属');
+  expect(reads).toHaveLength(2);
+ });

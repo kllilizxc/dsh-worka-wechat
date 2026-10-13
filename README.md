@@ -30,7 +30,7 @@
 便笺只读取已选私聊和群聊，默认每 5 秒一次。MCP 仅走 stdio，进程与子进程禁止联网。
 插件直接使用 DSH 的 subprocess 服务管理进程范围和退出清理，再施加一层禁网沙箱；避免 macOS 拒绝嵌套沙箱。
 
-本机配置 `~/.config/worka-wechat/runtime.json` 必须为 0600，包含 `python`、`project`（MCP 源码）、`cli`、`wcdb`、`metadata_state` 的绝对路径。运行文件不得位于临时目录。数据库密钥由已审核的本机组件保存在 `~/.config/wxcli/config.json`，不进入本仓库。配置、聊天内容、联系人和日志不得提交、上传或注入模型上下文。
+本机配置 `~/.config/worka-wechat/runtime.json` 必须为 0600，包含 `python`、`project`（MCP 源码）、`cli`、`wcdb`、`metadata_state` 的绝对路径。运行文件不得位于临时目录。数据库密钥由已审核的本机组件保存在 `~/.config/wxcli/config.json`，不进入本仓库。配置、联系人和日志不得提交或上传。默认仅本机查看；用户明确授权并批准连线后，已选会话的新文字消息可进入该连线 AI 上下文。本人发送且会话 ID 不是 filehelper 的消息不触发连线；文件传输助手按稳定 ID 判断。聊天资料不上传到代码仓库或其他网站。
 
 经过本机验证的组合：WeChat 4.1.13 (269602)、wechat-local-agent-mcp 0.4.0 commit b7c1de20462e87a80e6c45b86eb17c7d1230d500、wechat-cli 1.6.25。它们均非腾讯官方接口。
 首次初始化需要单独审核：使用移除了密码持久化的 wxkey 安全构建，适配中文“微信.app”路径，由 macOS 原生授权窗口授权。保持 SIP 开启、原版签名不变。不执行上游自动安装/升级或 bootstrap；升级微信后重新验证兼容性。
