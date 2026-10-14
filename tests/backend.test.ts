@@ -66,11 +66,10 @@ test('invalid message shape fails without publishing an empty replacement or adv
   await expect(backend.tick()).rejects.toThrow('消息结构变化');expect(backend.store.value.chats[0]!.cursor).toBe('c1');
   expect(backend.store.value.chats[0]!.messages).toHaveLength(1);
 });
-test('private data stays outside note state and generic record metadata; model tool reads are blocked',async()=>{
+test('private data stays outside note state and generic records; non-owning mutations remain rejected',async()=>{
   const {backend,metadata,dir,user}=await setup();await backend.tick();
   expect(JSON.stringify([...metadata.values()])).not.toContain('合成');
-  expect(await backend.beforeNativeTool({name:'workbench',arguments:{method:'note.query',input:{noteId:'note',name:'messages'}}})).toContain('本机');
-  await expect(backend.invoke('select',{chats:[chat]},{...user,kind:'agent'})).rejects.toThrow('界面');
+  await expect(backend.invoke('select',{chats:[chat]},{...user,kind:'agent'})).rejects.toThrow('授权');
   expect(JSON.parse(await readFile(join(dir,'data/connection.json'),'utf8')).chats).toHaveLength(1);
   await expect(backend.resources.messages!.load({chatId:chat.id},{scope:{noteId:'other'}} as any)).rejects.toThrow('所属');
 });
@@ -141,3 +140,88 @@ test('record feedback survives reingestion without publishing an additional even
   await expect(load({id:chat.id},{...ctx,scope:{noteId:'other'}})).rejects.toThrow('所属');
   expect(reads).toHaveLength(2);
  });
+
+test('one-click initialization verifies local reads and chooses only filehelper without exposing content',async()=>{
+  const {backend,user,reader}=await setup();
+  await backend.invoke('select',{chats:[]},user);
+  await backend.invoke('enable',{enabled:false},user);
+  const result=await backend.invoke('initialize',{}, {...user,kind:'agent',controlNoteId:'note'});
+  expect(result).toEqual({ready:true,selected:1});
+  expect(backend.store.value.chats.map(row=>row.chat.id)).toEqual(['filehelper']);
+  expect(reader.calls.some(call=>call.tool==='timeline'&&call.input.talker==='filehelper')).toBe(true);
+  expect(JSON.stringify(result)).not.toContain('合成文字');
+  expect(backend.store.value.routing?.enabled??false).toBe(false);
+  await backend.invoke('initialize',{}, {...user,kind:'agent',controlNoteId:'note'});
+  expect(backend.store.value.chats).toHaveLength(1);
+  await expect(backend.invoke('initialize',{}, {...user,kind:'schedule'})).rejects.toThrow('授权');
+  await expect(backend.invoke('initialize',{}, {...user,kind:'agent',noteId:'other',controlNoteId:'other'})).rejects.toThrow('原便笺');
+});
+test('AI context excludes messages from before explicit routing consent',async()=>{
+  const {backend,user}=await setup();await backend.tick();
+  await backend.invoke('autoConfigure',{enabled:true},user);
+  const since=backend.store.value.routing!.since;
+  await backend.store.transaction(value=>{value.chats[0]!.messages.push({id:'new',time:Math.ceil(since/1000),kind:'text',text:'公开示例需求',fromMe:false,sender:'合成发送人'});});
+  const ctx:any={scope:{noteId:'note'}};
+  const context:any=await backend.resources.context!.load({id:chat.id},ctx);
+  const item:any=await backend.resources.item!.load({id:chat.id},ctx);
+  expect(context.messages.map((row:any)=>row.id)).toEqual(['new']);
+  expect(item.item.messageIds).toEqual(['new']);
+  expect(item.item.latest.text).toBe('公开示例需求');
+});
+
+
+test('authorized selected chats can be found by name without events and their returned ID reads current context',async()=>{
+  const {backend,user,reader}=await setup();
+  const read:any=async(request:any)=>request.name==='synchronizer.wechat.messages.status'?{nextRunAt:123,error:null}:undefined;
+  const ctx:any={scope:{noteId:'note'},read};
+  const before:any=await backend.resources.status!.load({},ctx);
+  expect(before).toMatchObject({enabled:true,paused:false,authorized:false,automatic:false,selectedCount:1});
+  expect(await backend.resources.chats!.load({},ctx)).toEqual({items:[chat]});
+  await backend.invoke('autoConfigure',{enabled:true},user);
+  // Selection exists independently of ingestion, events or handling receipts.
+  const calls=reader.calls.length;
+  const found:any=await backend.resources.chats!.load({query:'合成'},ctx);
+  expect(found).toEqual({items:[chat]});expect(reader.calls).toHaveLength(calls);
+  const context:any=await backend.resources.context!.load({id:found.items[0].id},ctx);
+  expect(context).toEqual({chat,messages:[]});
+  expect(await backend.resources.chats!.load({query:'不存在'},ctx)).toEqual({items:[]});
+  await expect(backend.resources.chats!.load({},{...ctx,scope:{noteId:'other'}})).rejects.toThrow('所属');
+  await expect(backend.resources.context!.load({id:'unselected'},ctx)).rejects.toThrow('选择');
+  await backend.invoke('autoConfigure',{enabled:false},user);
+  expect((await backend.resources.chats!.load({},ctx) as any).items).toEqual([chat]);
+  expect(await backend.resources.status!.load({},ctx)).toMatchObject({authorized:true,automatic:false});
+});
+
+test('connection status separates successful empty selection, paused reads, sync failures and AI automation',async()=>{
+  const {backend,user,setPaused,setDesktop}=await setup();
+  let error:string|null=null;
+  const ctx:any={scope:{noteId:'note'},read:async()=>({nextRunAt:123,error})};
+  setPaused(true);expect(await backend.resources.status!.load({},ctx)).toMatchObject({enabled:true,paused:true,automatic:false});
+  setPaused(false);setDesktop(false);expect((await backend.resources.status!.load({},ctx) as any).paused).toBe(true);
+  setDesktop(true);error='Synthetic sync failure';expect(await backend.resources.status!.load({},ctx)).toMatchObject({paused:false,error});
+  error=null;await backend.invoke('select',{chats:[]},user);
+  const status:any=await backend.resources.status!.load({},ctx);
+  expect(status).toMatchObject({selectedCount:0,error:null,authorized:false,automatic:false});
+  expect(JSON.stringify(status)).not.toContain(chat.name);
+  await expect(backend.resources.status!.load({},{...ctx,scope:{noteId:'other'}})).rejects.toThrow('所属');
+});
+
+
+test('owning Agent controls selection, reading, pause and local feedback without a connection or UI click',async()=>{
+  const {backend,reader,user}=await setup();await backend.tick();
+  const agent={...user,kind:'agent' as const,controlNoteId:'note'};
+  const another={id:'selected-group',name:'Synthetic group',type:'group' as const};
+  await backend.invoke('select',{chats:[chat,another]},agent);
+  expect(backend.store.value.chats.map(row=>row.chat.id)).toEqual([chat.id,another.id]);
+  await backend.invoke('enable',{enabled:false},agent);expect(backend.store.value.enabled).toBe(false);
+  await backend.invoke('enable',{enabled:true},agent);
+  await backend.invoke('refresh',{},agent);
+  await backend.invoke('recordHandling',{id:chat.id,messageId:'1',status:'skipped',reason:'Local user decision'},agent);
+  expect(backend.store.value.chats[0]!.messages[0]!.handling?.status).toBe('skipped');
+  const history:any=await backend.resources.messages!.load({chatId:chat.id},{scope:{noteId:'note'}} as any);
+  expect(history.messages.map((m:any)=>m.id)).toEqual(['1']);
+  expect(backend.store.value.routing?.enabled??false).toBe(false);
+  await expect(backend.invoke('select',{chats:[]},{...agent,controlNoteId:'other'})).rejects.toThrow('授权');
+  await expect(backend.invoke('select',{chats:[]},{...agent,noteId:'other'})).rejects.toThrow('所属');
+  expect(reader.calls.length).toBeGreaterThan(0);
+});
