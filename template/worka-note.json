@@ -1,22 +1,4 @@
 {
-  "schemaVersion": 1,
-  "name": "微信",
-  "scenarios": "在本机查看已选私聊和群聊的新文字消息。",
-  "icon": {
-    "type": "emoji",
-    "value": "💬"
-  },
-  "files": [
-    "worka-source.json",
-    "package.json",
-    "model.ts",
-    "actions.ts",
-    "view.tsx",
-    "task.tsx",
-    "style.css",
-    "SKILL.md",
-    "README.md"
-  ],
   "onboarding": {
     "title": "接入本机微信",
     "description": "由 Agent 准备本机微信后台、读取组件和配置，复用已有登录；一个宿主使用一张微信便笺。",
@@ -25,5 +7,40 @@
       "已有会话选择会保留，之后可在便笺内调整。",
       "初始化只开启本机读取；将新消息交给执行台需明确开启 AI 自动处理。"
     ]
-  }
+  },
+  "schemaVersion": 1,
+  "name": "微信",
+  "scenarios": "在本机查看已选私聊和群聊的新文字消息。",
+  "icon": {
+    "type": "emoji",
+    "value": "💬"
+  },
+  "files": [
+    "README.md",
+    "SKILL.md",
+    "actions.ts",
+    "model.ts",
+    "package.json",
+    "style.css",
+    "task.tsx",
+    "view.tsx",
+    "worka-source.json",
+    ".gitattributes",
+    "worka-prebuilt/contract/references/types/model.d.ts",
+    "worka-prebuilt/contract/references/types/actions.d.ts",
+    "worka-prebuilt/contract/references/api.d.ts",
+    "worka-prebuilt/contract/SKILL.md",
+    "worka-prebuilt/contract/manifest.json",
+    "worka-prebuilt/zod-config.mjs",
+    "worka-prebuilt/index.html",
+    "worka-prebuilt/entry-bundle.js",
+    "worka-prebuilt/view-runtime.mjs",
+    "worka-prebuilt/entry-bundle.tailwind.css",
+    "worka-prebuilt/view-eqpr8av5.js",
+    "worka-prebuilt/view-runtime-32jchkw0.js",
+    "worka-prebuilt/actions.mjs",
+    "worka-prebuilt/entry-bundle.css",
+    "worka-prebuilt/entry-983ged09.js",
+    "worka-prebuilt/manifest.json"
+  ]
 }

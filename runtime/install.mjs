@@ -11,9 +11,9 @@ export async function installRuntime({release,archive,root,configFile,keyConfig}
   const here=dirname(fileURLToPath(import.meta.url));
   release??=JSON.parse(await readFile(join(here,'release.json'),'utf8'));
   if(!/^\d+\.\d+\.\d+$/.test(release.version)||!/^[a-f0-9]{64}$/.test(release.sha256))throw Error('Invalid fixed runtime release');
-  root=resolve(root||join(homedir(),'Library/Application Support/Worka/components/wechat',release.version));
-  configFile=resolve(configFile||join(homedir(),'.config/worka-wechat/runtime.json'));
-  keyConfig=resolve(keyConfig||join(homedir(),'.config/wxcli/config.json'));
+  root=resolve(root||process.env.WORKA_WECHAT_RUNTIME_ROOT||join(homedir(),'Library/Application Support/Worka/components/wechat',release.version));
+  configFile=resolve(configFile||process.env.WORKA_WECHAT_RUNTIME_CONFIG||join(homedir(),'.config/worka-wechat/runtime.json'));
+  keyConfig=resolve(keyConfig||process.env.WORKA_WECHAT_KEY_CONFIG||join(homedir(),'.config/wxcli/config.json'));
   await mkdir(dirname(root),{recursive:true,mode:0o700});
   let receipt;
   try {receipt=await verifyBundle(root);if(receipt.version!==release.version)throw Error('Runtime version mismatch')}

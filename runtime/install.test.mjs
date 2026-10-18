@@ -39,3 +39,21 @@ test('bad archive leaves the existing configuration untouched',async()=>{
     assert.equal(await readFile(configFile,'utf8'),'existing configuration');await assert.rejects(access(root));
   } finally {await rm(dir,{recursive:true,force:true})}
 });
+
+test('isolated profile environment is shared by installer and reader without using global key configuration',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'wechat-profile-'));
+  const paths={WORKA_WECHAT_RUNTIME_ROOT:join(dir,'components'),WORKA_WECHAT_RUNTIME_CONFIG:join(dir,'config/runtime.json'),WORKA_WECHAT_KEY_CONFIG:join(dir,'private/keys.json')};
+  const before=Object.fromEntries(Object.keys(paths).map(key=>[key,process.env[key]]));
+  try {
+    Object.assign(process.env,paths);
+    const installed=await installRuntime({release,archive});
+    assert.equal(installed.configFile,paths.WORKA_WECHAT_RUNTIME_CONFIG);
+    const config=JSON.parse(await readFile(installed.configFile,'utf8'));
+    assert.equal(config.key_config,paths.WORKA_WECHAT_KEY_CONFIG);
+    assert.ok(config.cli.startsWith(paths.WORKA_WECHAT_RUNTIME_ROOT));
+    await assert.rejects(access(config.key_config));
+  } finally {
+    for(const [key,value] of Object.entries(before))if(value===undefined)delete process.env[key];else process.env[key]=value;
+    await rm(dir,{recursive:true,force:true});
+  }
+});

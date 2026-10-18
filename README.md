@@ -6,9 +6,13 @@
 
 用户点击“一键 AI 初始化”后，由 Agent 完成后台、读取组件、配置和首次读取。无需用户事先安装 Python、Go 或手工创建配置文件。已有微信便笺继续使用原实例，保留会话选择、游标、暂停状态和 AI 开关。
 
+已有便笺直接初始化；尚无便笺时，通过 Worka 的 `note.importPreview` / `note.import` 从 `template` 安装发布便笺，复用随源码提供的预构建界面。
+
 1. 通过 Worka 的 `updates.prepareInstall`、`updates.reloadPlugin` 安装本仓库后台，宿主提供 Worka 与 DSH peer，插件不安装第二套宿主。
 2. 在 checkout 执行 `node runtime/install.mjs`。Worka App 自带 Node/Bun；也可用 Bun 执行。工具下载固定版本的完整运行包，校验归档和文件收据，安装到当前用户的应用数据目录，并原子写入权限为 0600 的 `~/.config/worka-wechat/runtime.json`。不需要管理员权限，不读取消息或密钥，不修改已有密钥配置。
 3. 先调用本便笺 `initialize({})`。若尚未完成首次密钥准备，使用安装工具返回的 `bootstrap` 命令及环境运行本版本 wxkey，再继续原便笺的初始化和实际查询。账号登录、手机确认、macOS 原生授权由用户完成；技术诊断和重试由 Agent 执行。首次准备使用系统 LLDB；若系统尚无 Apple 命令行工具，由 Agent 调用系统安装入口完成准备，用户处理必要的系统确认。无需给 CLI 手工添加完全磁盘访问权限。
+
+隔离 profile 或自定义目录可通过 `--root`、`--config`、`--key-config` 指定路径，也可设置对应的 `WORKA_WECHAT_RUNTIME_ROOT`、`WORKA_WECHAT_RUNTIME_CONFIG`、`WORKA_WECHAT_KEY_CONFIG`。读取后台沿用同一 runtime config，确保首次安装和后续读取使用同一用户环境。
 
 安装工具只准备技术环境，不替 Agent 决定业务范围或实现额外初始化状态机。下载、构建或读取失败时保留实际错误，Agent 可检查环境、修复组件并继续，不能只让用户“先把环境装好”。
 

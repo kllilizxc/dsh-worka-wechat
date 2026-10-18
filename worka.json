@@ -17,19 +17,6 @@
   "capabilities": [
     "wechat"
   ],
-  "initialState": "template/initial-state.json",
-  "files": [
-    "template/worka-note.json",
-    "template/worka-source.json",
-    "template/package.json",
-    "template/model.ts",
-    "template/actions.ts",
-    "template/view.tsx",
-    "template/task.tsx",
-    "template/style.css",
-    "template/SKILL.md",
-    "template/README.md"
-  ],
   "requirements": [
     "macOS arm64 与微信 4.x；Agent 按 README 安装后台和固定版本运行包，复用已有登录与配置。",
     "首次微信登录与 macOS 原生授权由用户完成；保持 SIP 开启，不保存管理员密码。"
