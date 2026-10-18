@@ -92,7 +92,8 @@ try {
   const asset=`worka-wechat-runtime-${version}-darwin-arm64.tar.gz`;
   run('/usr/bin/tar',['-czf',join(out,asset),'-C',payload,'.']);
   const sha256=digest(await readFile(join(out,asset)));
-  const release={version,platform:'darwin',arch:'arm64',url:`https://github.com/kllilizxc/dsh-worka-wechat/releases/download/runtime-v${version}/${asset}`,sha256};
+  const tag=process.env.GITHUB_REF_TYPE==='tag'?process.env.GITHUB_REF_NAME:`runtime-v${version}`;
+  const release={version,platform:'darwin',arch:'arm64',url:`https://github.com/kllilizxc/dsh-worka-wechat/releases/download/${tag}/${asset}`,sha256};
   await writeFile(join(out,'release.json'),JSON.stringify(release,null,2)+'\n');
   console.log(JSON.stringify({built:true,asset,sha256}));
 } finally {await rm(work,{recursive:true,force:true})}
