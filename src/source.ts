@@ -8,7 +8,7 @@ export type Tool = 'status' | 'sessions' | 'timeline' | 'read_events';
 export type ReadResult = {identity:string; data:any};
 export interface Reader {call(tool:Tool,input:Record<string,unknown>,signal?:AbortSignal):Promise<ReadResult>; close():Promise<void>}
 export const READ_TOOLS = new Set<Tool>(['status','sessions','timeline','read_events']);
-export const READ_ERROR = '读取微信失败，请确认这台 Mac 的微信已登录。若升级后仍失败，需要重新验证本机读取组件。';
+export const READ_ERROR = '暂时无法读取本机微信，请让 Agent 检查读取组件并修复接入。';
 
 /** DSH owns the process; the outer OS sandbox also denies networking to MCP and CLI descendants. */
 export class LocalMcp implements Reader {
@@ -20,7 +20,7 @@ export class LocalMcp implements Reader {
   private sequence=0;
   private buffer='';
   private closed=false;
-  constructor(private runtime:Pick<RuntimeHost,'subprocess'>,private bridge:string,private configFile=resolve(homedir(),'.config/worka-wechat/runtime.json')){}
+  constructor(private runtime:Pick<RuntimeHost,'subprocess'>,private bridge:string,private configFile=process.env.WORKA_WECHAT_RUNTIME_CONFIG||resolve(homedir(),'.config/worka-wechat/runtime.json')){}
   private fail() {
     this.ready?.reject(new Error(READ_ERROR));this.ready=undefined;
     for(const entry of this.pending.values())entry.reject(new Error(READ_ERROR));
@@ -33,7 +33,7 @@ export class LocalMcp implements Reader {
       const config=JSON.parse(await readFile(this.configFile,'utf8'));
       const ready=new Promise<void>((resolve,reject)=>{this.ready={resolve,reject};});
       const child=await this.runtime.subprocess.spawn({command:'/usr/bin/sandbox-exec',
-        args:['-p','(version 1)(allow default)(deny network*)',config.python,this.bridge,this.configFile],
+        args:['-p','(version 1)(allow default)(deny network*)',config.python,'-B',this.bridge,this.configFile],
         env:{PYTHONDONTWRITEBYTECODE:'1'},cwd:config.project});
       if(this.closed){await child.kill('SIGTERM');throw new Error('微信读取已停止');}
       this.child=child;

@@ -1,9 +1,41 @@
 {
-  "schemaVersion":1,"id":"dsh-worka-wechat","title":"微信","status":"ready",
-  "icon":{"type":"emoji","value":"💬"},"compatibility":{"worka":">=0.3.0 <0.4.0"},
-  "backend":{"packageName":"dsh-worka-wechat","build":true},"capabilities":["wechat"],
-  "initialState":"template/initial-state.json",
-  "files":["template/worka-note.json","template/worka-source.json","template/package.json","template/model.ts","template/actions.ts","template/view.tsx","template/task.tsx","template/style.css","template/SKILL.md","template/README.md"],
-  "requirements":["先验证本机微信兼容性。保持 SIP 开启，不保存管理员密码。","准备持久的本机运行组件和 0600 runtime.json；不执行上游自动初始化或升级。"],
-  "verification":["确认 code.get.status=ready。","在本机界面选择会话，检查自动读取、暂停/恢复和重启续读；真实验证仅输出脱敏计数。"]
+  "schemaVersion": 1,
+  "id": "dsh-worka-wechat",
+  "title": "微信",
+  "status": "ready",
+  "icon": {
+    "type": "emoji",
+    "value": "💬"
+  },
+  "compatibility": {
+    "worka": ">=0.3.0 <0.4.0"
+  },
+  "backend": {
+    "packageName": "dsh-worka-wechat",
+    "build": true
+  },
+  "capabilities": [
+    "wechat"
+  ],
+  "initialState": "template/initial-state.json",
+  "files": [
+    "template/worka-note.json",
+    "template/worka-source.json",
+    "template/package.json",
+    "template/model.ts",
+    "template/actions.ts",
+    "template/view.tsx",
+    "template/task.tsx",
+    "template/style.css",
+    "template/SKILL.md",
+    "template/README.md"
+  ],
+  "requirements": [
+    "macOS arm64 与微信 4.x；Agent 按 README 安装后台和固定版本运行包，复用已有登录与配置。",
+    "首次微信登录与 macOS 原生授权由用户完成；保持 SIP 开启，不保存管理员密码。"
+  ],
+  "verification": [
+    "空白组件目录安装固定运行包，核对收据与配置权限。",
+    "当前便笺实际初始化及读取成功，已有会话选择和 AI 开关保留；仅输出脱敏结果。"
+  ]
 }
