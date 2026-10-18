@@ -8,7 +8,7 @@ description: 在本机查看微信消息，经用户明确授权后将已选会�
 
 # 微信便笺
 
-后台来源：`https://github.com/kllilizxc/dsh-worka-wechat`，版本 `v0.2.0`，包名 `dsh-worka-wechat`。后台与完整运行组件的安装工具位于该版本的仓库根目录；`updates.prepareInstall` 的 `ref` 使用此版本。
+后台来源：`https://github.com/kllilizxc/dsh-worka-wechat`，版本 `v0.2.0`，包名 `dsh-worka-wechat`。后台与完整运行组件的安装工具位于该版本的仓库根目录；使用宿主原生执行和文件工具准备源码与依赖，已构建后台通过 `updates.reloadPlugin` 加载。
 
 用户要求初始化时，复用当前便笺，按本仓库 README 的“Agent 初始化”准备缺失的后台与运行组件，再调用当前便笺 `initialize({})` 并核对实际读取。组件安装工具是 `runtime/install.mjs`；技术安装、配置和修复由 Agent 完成，不要求用户先装环境或手工添加 CLI 磁盘权限。首次登录和系统原生授权由用户完成。已有配置与会话选择保留；无已有选择时只接入文件传输助手。初始化只返回就绪状态和计数，不返回正文，不开启 AI 自动处理。不读取原始密钥或未选会话正文。
 

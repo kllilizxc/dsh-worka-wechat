@@ -8,7 +8,7 @@
 
 已有便笺直接初始化；尚无便笺时，通过 Worka 的 `note.importPreview` / `note.import` 从 `template` 安装发布便笺，复用随源码提供的预构建界面。
 
-1. 通过 Worka 的 `updates.prepareInstall`、`updates.reloadPlugin` 安装本仓库后台，宿主提供 Worka 与 DSH peer，插件不安装第二套宿主。
+1. Agent 使用宿主原生执行和文件工具，按本仓库的构建脚本准备后台，再通过 `updates.reloadPlugin({packageName,directory})` 加载。宿主提供 Worka 与 DSH peer，插件不安装第二套宿主。
 2. 在 checkout 执行 `node runtime/install.mjs`。Worka App 自带 Node/Bun；也可用 Bun 执行。工具下载固定版本的完整运行包，校验归档和文件收据，安装到当前用户的应用数据目录，并原子写入权限为 0600 的 `~/.config/worka-wechat/runtime.json`。不需要管理员权限，不读取消息或密钥，不修改已有密钥配置。
 3. 先调用本便笺 `initialize({})`。若尚未完成首次密钥准备，使用安装工具返回的 `bootstrap` 命令及环境运行本版本 wxkey，再继续原便笺的初始化和实际查询。账号登录、手机确认、macOS 原生授权由用户完成；技术诊断和重试由 Agent 执行。首次准备使用系统 LLDB；若系统尚无 Apple 命令行工具，由 Agent 调用系统安装入口完成准备，用户处理必要的系统确认。无需给 CLI 手工添加完全磁盘访问权限。
 
