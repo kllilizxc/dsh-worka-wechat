@@ -2,7 +2,7 @@
 
 在本机只读查看自行选择的个人微信私聊和群聊。需要 macOS arm64、Worka 0.3 和微信 4.x，非腾讯官方接口。
 
-点击“一键 AI 初始化”，Agent 按[项目安装说明](https://github.com/kllilizxc/dsh-worka-wechat#agent-初始化)安装缺失后台和固定版本运行组件，再完成配置及实际读取。用户无需事先安装 Python、Go 或手工配置，只处理必要的系统授权与微信登录。
+后台版本为 `dsh-worka-wechat@v0.2.0`。点击“一键 AI 初始化”，Agent 按[项目安装说明](https://github.com/kllilizxc/dsh-worka-wechat/blob/v0.2.0/README.md#agent-初始化)安装缺失后台和固定版本运行组件，再完成配置及实际读取。用户无需事先安装 Python、Go 或手工配置，只处理必要的系统授权与微信登录。
 
 每个 Worka 宿主当前仅支持一个微信便笺；已有便笺时继续使用原便笺。新安装没有预选会话，也不会自动开始读取。
 

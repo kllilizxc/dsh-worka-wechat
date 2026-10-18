@@ -16,6 +16,7 @@
     "value": "💬"
   },
   "files": [
+    ".gitattributes",
     "README.md",
     "SKILL.md",
     "actions.ts",
@@ -25,7 +26,6 @@
     "task.tsx",
     "view.tsx",
     "worka-source.json",
-    ".gitattributes",
     "worka-prebuilt/contract/references/types/model.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
     "worka-prebuilt/contract/references/api.d.ts",
