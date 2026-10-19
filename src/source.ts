@@ -1,14 +1,16 @@
-import {readFile} from 'node:fs/promises';
+import {access,readFile} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import {resolve} from 'node:path';
 import {StringDecoder} from 'node:string_decoder';
 import type {ManagedProcess, RuntimeHost} from '@realiz3r/worka/host';
+import {OperationRejectedError} from '@realiz3r/worka/host';
 
 export type Tool = 'status' | 'sessions' | 'timeline' | 'read_events';
 export type ReadResult = {identity:string; data:any};
 export interface Reader {call(tool:Tool,input:Record<string,unknown>,signal?:AbortSignal):Promise<ReadResult>; close():Promise<void>}
 export const READ_TOOLS = new Set<Tool>(['status','sessions','timeline','read_events']);
 export const READ_ERROR = '暂时无法读取本机微信，请让 Agent 检查读取组件并修复接入。';
+export class RuntimeSetupError extends OperationRejectedError {}
 
 /** DSH owns the process; the outer OS sandbox also denies networking to MCP and CLI descendants. */
 export class LocalMcp implements Reader {
@@ -30,7 +32,14 @@ export class LocalMcp implements Reader {
     if(this.closed)throw new Error('微信读取已停止');
     if(this.starting)return this.starting;
     this.starting=(async()=>{
-      const config=JSON.parse(await readFile(this.configFile,'utf8'));
+      const config=JSON.parse(await readFile(this.configFile,'utf8').catch(error=>{
+        if(error.code==='ENOENT')throw new RuntimeSetupError('尚未准备本机微信读取组件，请打开设置指引完成初始化。');
+        throw error;
+      }));
+      if(config.key_config)await access(config.key_config).catch(error=>{
+        if(error.code==='ENOENT')throw new RuntimeSetupError('本机微信读取授权尚未完成。请先在这台 Mac 登录微信，再打开设置指引完成读取授权。');
+        throw error;
+      });
       const ready=new Promise<void>((resolve,reject)=>{this.ready={resolve,reject};});
       const child=await this.runtime.subprocess.spawn({command:'/usr/bin/sandbox-exec',
         args:['-p','(version 1)(allow default)(deny network*)',config.python,'-B',this.bridge,this.configFile],
@@ -60,7 +69,7 @@ export class LocalMcp implements Reader {
       void child.wait().then(stopped,stopped);
       const timeout=setTimeout(()=>{this.fail();void child.kill('SIGTERM');},35_000);
       try{await ready;}finally{clearTimeout(timeout);}
-    })().catch(()=>{this.starting=undefined;throw new Error(READ_ERROR);});
+    })().catch(error=>{this.starting=undefined;throw error instanceof RuntimeSetupError?error:new Error(READ_ERROR);});
     return this.starting;
   }
   async call(tool:Tool,input:Record<string,unknown>,signal?:AbortSignal):Promise<ReadResult> {

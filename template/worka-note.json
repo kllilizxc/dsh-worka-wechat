@@ -26,6 +26,7 @@
     "task.tsx",
     "view.tsx",
     "worka-source.json",
+    "worka-prebuilt/view-zvy5zjqt.js",
     "worka-prebuilt/contract/references/types/model.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
     "worka-prebuilt/contract/references/api.d.ts",
@@ -35,12 +36,11 @@
     "worka-prebuilt/index.html",
     "worka-prebuilt/entry-bundle.js",
     "worka-prebuilt/view-runtime.mjs",
+    "worka-prebuilt/view-runtime-t52h3my5.js",
     "worka-prebuilt/entry-bundle.tailwind.css",
-    "worka-prebuilt/view-eqpr8av5.js",
-    "worka-prebuilt/view-runtime-32jchkw0.js",
+    "worka-prebuilt/entry-mwjbqgd9.js",
     "worka-prebuilt/actions.mjs",
     "worka-prebuilt/entry-bundle.css",
-    "worka-prebuilt/entry-983ged09.js",
     "worka-prebuilt/manifest.json"
   ]
 }

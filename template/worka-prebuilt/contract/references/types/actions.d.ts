@@ -2,6 +2,9 @@ import { z } from '@dsh-workbench/runtime';
 export { note } from './model';
 export declare const background: import("@dsh-workbench/runtime").BoundBackground;
 export declare const queries: {
+    connection: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{}, z.core.$strip>, z.ZodObject<{
+        initialized: z.ZodBoolean;
+    }, z.core.$strip>, import("@dsh-workbench/runtime").NoteQueryContext<import("@dsh-workbench/runtime").NoteModel<undefined, undefined, {}>>>;
     status: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{}, z.core.$strip>, z.ZodObject<{
         enabled: z.ZodBoolean;
         paused: z.ZodBoolean;

@@ -3,6 +3,8 @@ html,body,#root{height:100%;margin:0}
 .wechat{--chat-bg:#ededed;--chat-sidebar:#e7e7e7;--chat-bubble:#fff;--chat-selected:#d5d5d5;--chat-green:#95ec69;--chat-green-ink:#102714;--chat-avatar:#ddd;height:100%;min-width:0;background:var(--chat-bg);color:var(--wb-ink);font-family:var(--wb-font-family);font-size:14px;display:flex;flex-direction:column}
 :root[data-theme="dark"] .wechat{--chat-bg:#111;--chat-sidebar:#191919;--chat-bubble:#2c2c2c;--chat-selected:#303030;--chat-green:#3eb575;--chat-avatar:#383838}
 .wechat button{font-family:inherit}
+.wechat-setup .worka-note-guidance button{min-height:44px}
+.wechat-setup.expanded{padding:24px}
 .wechat p{margin:6px 0;line-height:1.6;color:var(--wb-muted)}
 .wechat-identity{display:flex;align-items:center;gap:8px;min-width:0}
 .wechat-identity strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

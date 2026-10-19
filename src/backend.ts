@@ -18,6 +18,10 @@ export class WechatBackend {
     this.activity=host.app.records({owner:'wechat',collection:'activity',storagePrefix:'wechat:activity:'});
     const subscribe=(_input:unknown,invalidate:()=>void)=>store.subscribe(invalidate);
     this.resources={
+      connection:{version:'1',subscribe,load:async(_input,ctx)=>{
+        if(store.value.noteId)this.owner(ctx.scope.noteId);
+        return {initialized:!!store.value.noteId&&!!(store.value.initialized||store.value.identity||store.value.chats.length)};
+      }},
       status:{version:'1',subscribe,load:async(_input,ctx)=>{
         this.owner(ctx.scope.noteId);
         const sync=await ctx.read({name:'synchronizer.wechat.messages.status',input:{}}) as any;
@@ -171,7 +175,7 @@ export class WechatBackend {
       const status=await this.reader.call('status',{});this.account(status.identity);
       if(status.data.status?.live_read_ok!==true)throw Error(READ_ERROR);
       await this.store.transaction(value=>{
-        value.noteId=caller.noteId!;value.identity=status.identity;value.enabled=true;
+        value.noteId=caller.noteId!;value.identity=status.identity;value.enabled=true;value.initialized=true;
         if(!value.chats.length)value.chats=[{chat:{id:'filehelper',name:'文件传输助手',type:'private'},messages:[]}];
       });
       await this.activityChanged();await this.tick();
@@ -216,7 +220,7 @@ export class WechatBackend {
       const status=await this.reader.call('status',{});
       await this.store.transaction(value=>{
         if(value.identity&&value.identity!==status.identity&&chats.length)throw Error('微信账号已变化，请先清除已选会话。');
-        value.identity=chats.length?status.identity:null;
+        value.identity=chats.length?status.identity:null;value.initialized=true;
         value.chats=chats.map(chat=>{const old=value.chats.find(row=>row.chat.id===chat.id);return old?{...old,chat}:{chat,messages:[]};});
         value.error=null;
       });await this.activityChanged();return {selected:chats.length};

@@ -1,4 +1,4 @@
-// node_modules/zod/v4/core/util.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/util.js
 function getEnumValues(entries) {
   const numericValues = Object.values(entries).filter((v) => typeof v === "number");
   const values = Object.entries(entries).filter(([k, _]) => numericValues.indexOf(+k) === -1).map(([_, v]) => v);
@@ -566,7 +566,7 @@ function constantCatch(value) {
   return fn;
 }
 
-// node_modules/zod/v4/core/core.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/core.js
 var _a;
 var _zodDesc = { value: undefined, enumerable: false };
 var _E = "captureStackTrace" in Error ? Error : null;
@@ -685,7 +685,7 @@ function config(newConfig) {
     Object.assign(globalConfig, newConfig);
   return globalConfig;
 }
-// node_modules/zod/v4/core/errors.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/errors.js
 function _getMessage() {
   const internals = this._zod;
   internals.message ?? (internals.message = JSON.stringify(internals.def, jsonStringifyReplacer, 2));
@@ -800,7 +800,7 @@ function formatError(error, mapper = (issue) => issue.message) {
   return fieldErrors;
 }
 
-// node_modules/zod/v4/core/parse.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/parse.js
 function finalizeParams(callee, params) {
   return { callee: params?.callee ?? callee, Err: params?.Err };
 }
@@ -947,7 +947,7 @@ var _safeEncodeAsync = (_Err) => async (schema, value, _ctx) => {
 var _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
   return _safeParseAsync(_Err)(schema, value, _ctx);
 };
-// node_modules/zod/v4/core/regexes.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/regexes.js
 var cuid = /^[cC][0-9a-z]{6,}$/;
 var cuid2 = /^[0-9a-z]+$/;
 var ulid = /^[0-7][0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{25}$/;
@@ -1006,7 +1006,7 @@ var _null = /^null$/i;
 var lowercase = /^[^A-Z]*$/;
 var uppercase = /^[^a-z]*$/;
 
-// node_modules/zod/v4/core/checks.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/checks.js
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a;
   inst._zod ?? (inst._zod = {});
@@ -1322,7 +1322,7 @@ var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (ins
   };
 });
 
-// node_modules/zod/v4/core/doc.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/doc.js
 class Doc {
   constructor(args = [], closed = {}) {
     this.content = [];
@@ -1364,14 +1364,14 @@ ${content.join(`
   }
 }
 
-// node_modules/zod/v4/core/versions.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/versions.js
 var version = {
   major: 4,
   minor: 6,
   patch: 1
 };
 
-// node_modules/zod/v4/core/schemas.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/schemas.js
 var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a;
   inst ?? (inst = {});
@@ -2969,7 +2969,7 @@ var $ZodProperties = /* @__PURE__ */ $constructor("$ZodProperties", (inst, def) 
     yield this;
   }
 });
-// node_modules/zod/v4/core/memoizer.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/memoizer.js
 class $ZodCyclicError extends Error {
   constructor() {
     super(`Cannot parse a reference cycle that closes through a transform`);
@@ -3241,7 +3241,7 @@ function isBackEdge(ctx, value) {
   const backEdges = ctx[STATE]?.backEdges;
   return backEdges !== undefined && isRef(value) && backEdges.has(value);
 }
-// node_modules/zod/v4/locales/en.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/locales/en.js
 var error = () => {
   const Sizable = {
     string: { unit: "characters", verb: "to have" },
@@ -3362,7 +3362,7 @@ function en_default() {
     localeError: error()
   };
 }
-// node_modules/zod/v4/core/registries.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/registries.js
 var _a2;
 class $ZodRegistry {
   constructor() {
@@ -3409,7 +3409,7 @@ function registry() {
 }
 (_a2 = globalThis).__zod_globalRegistry ?? (_a2.__zod_globalRegistry = registry());
 var globalRegistry = globalThis.__zod_globalRegistry;
-// node_modules/zod/v4/core/api.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/api.js
 function _string(Class, params) {
   return new Class({
     type: "string",
@@ -3865,7 +3865,7 @@ function _check(fn, params) {
   ch._zod.check = fn;
   return ch;
 }
-// node_modules/zod/v4/core/to-json-schema.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/to-json-schema.js
 function assignProps(target, ...sources) {
   for (const source of sources) {
     for (const key of Reflect.ownKeys(source)) {
@@ -4388,7 +4388,7 @@ var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) =
   extractDefs(ctx, schema);
   return finalize(ctx, schema);
 };
-// node_modules/zod/v4/core/json-schema-processors.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/json-schema-processors.js
 var narrowMin = (agg, key, value) => {
   if (agg[key] === undefined || value > agg[key])
     agg[key] = value;
@@ -5159,7 +5159,7 @@ function toJSONSchema(input, params) {
   extractDefs(ctx, input);
   return finalize(ctx, input);
 }
-// node_modules/zod/v4/classic/errors.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/classic/errors.js
 var _installedErrorProtos = /* @__PURE__ */ new WeakSet([Object.prototype, Error.prototype]);
 function _lazyMethod(proto, key, make) {
   Object.defineProperty(proto, key, {
@@ -5204,7 +5204,7 @@ var ZodRealError = /* @__PURE__ */ $constructor("ZodError", initializer2, undefi
   Parent: Error
 });
 
-// node_modules/zod/v4/classic/parse.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/classic/parse.js
 var parse2 = /* @__PURE__ */ _parse(ZodRealError);
 var parseAsync = /* @__PURE__ */ _parseAsync(ZodRealError);
 var safeParse = /* @__PURE__ */ _safeParse(ZodRealError);
@@ -5218,7 +5218,7 @@ var safeDecode = /* @__PURE__ */ _safeDecode(ZodRealError);
 var safeEncodeAsync = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 var safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
 
-// node_modules/zod/v4/classic/schemas.js
+// ../framework/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/classic/schemas.js
 function _ensureDefaultLocale() {
   if (!globalConfig.localeError)
     config(en_default());
@@ -6140,405 +6140,526 @@ function json(params) {
   });
   return jsonSchema;
 }
-// node_modules/@dsh-workbench/runtime/dist/chunk-kcwez46r.mjs
-function L(F) {
-  return Object.freeze({ ...F });
+// ../framework/sdk/runtime/src/capabilities.ts
+var definitionKey = Symbol.for("worka.note-capability");
+function operation(kind, definition, handler, contextFirst = false) {
+  const execute = async (input, context) => {
+    const result = await handler(input, context);
+    const output = await captured.output.safeParseAsync(result);
+    if (!output.success)
+      throw new Error(`Capability output is invalid after execution; inspect effects before retrying: ${output.error.message}`);
+    return output.data;
+  };
+  const captured = Object.freeze({ ...definition, kind, execute });
+  const callable = contextFirst ? async (context, input) => execute(await captured.input.parseAsync(input), context) : async (input, context) => execute(await captured.input.parseAsync(input), context);
+  Object.defineProperty(callable, definitionKey, { value: captured });
+  return callable;
 }
-function N(F) {
-  return Object.freeze({ ...F });
-}
-async function Q(F, B, G) {
-  let Y = await B.input.parseAsync(G), T = await F.request(B.extension, B.method, Y);
-  try {
-    return await V(B.output, T);
-  } catch (X) {
-    throw Error(`Extension ${B.extension}.${B.method} returned invalid output after invocation; inspect effects before retrying`, { cause: X });
-  }
-}
-async function U(F, B, G) {
-  let Y = await B.input.parseAsync(G), T = await F.read({ name: B.name, input: json().parse(Y) });
-  if (T.data === undefined) {
-    let { data: X, ..._ } = T;
-    return _;
-  }
-  return { ...T, data: await V(B.output, T.data) };
-}
-async function V(F, B) {
-  return F.parseAsync(B);
-}
-var W = (F = {}) => Object.fromEntries(Object.entries(F).map(([B, G]) => [B, literal(G)]));
-function O(F, B, G) {
-  if (typeof G?.scope !== "function")
-    throw Error("Mounting a provider needs a scope function");
-  let Y = async (P) => B.scope.parseAsync(await G.scope(P)), T = (P, I) => {
-    for (let Z of I ?? [])
-      if (!Object.hasOwn(P, Z))
-        throw Error(`Provider ${B.extension} has no operation "${Z}"`);
-    return Object.entries(P).filter(([Z]) => !I || I.includes(Z));
-  }, X = {}, _ = {};
-  for (let [P, I] of T(B.queries, G.expose?.queries)) {
-    let Z = N({ name: I.resource ?? `extension.${B.extension}.${P}`, input: I.input.extend(B.scope.shape).extend(W(I.fixed)), output: I.output });
-    X[P] = F.query({ description: I.description ?? P, visibility: G.visibility ?? "public", input: I.input, output: I.output }, async ($, H) => {
-      let J = await U($.resources, Z, { ...H, ...I.fixed, ...await Y($) });
-      if (J.data !== undefined)
-        return J.data;
-      throw Object.assign(Error(J.error || `${B.extension} returned no data for ${P}`), J.errorCode ? { code: J.errorCode } : {});
-    });
-  }
-  for (let [P, I] of T(B.actions, G.expose?.actions)) {
-    let Z = L({ extension: B.extension, method: I.method ?? P, input: I.input.extend(B.scope.shape).extend(W(I.fixed)), output: I.output });
-    _[P] = F.action({ description: I.description ?? P, visibility: G.visibility ?? "public", input: I.input, output: I.output }, async ($, H) => Q($.host.extensions, Z, { ...H, ...I.fixed, ...await Y($) }));
-  }
-  return Object.freeze({ queries: Object.freeze(X), actions: Object.freeze(_) });
+function createEvent(definition) {
+  const captured = Object.freeze({ ...definition, kind: "event", output: definition.payload });
+  const event = {
+    name: definition.name,
+    publish(context, payload, options) {
+      return context.events.publish(captured.name, payload, options);
+    }
+  };
+  Object.defineProperty(event, definitionKey, { value: captured });
+  return Object.freeze(event);
 }
 
-// node_modules/@dsh-workbench/runtime/dist/chunk-y9skaen0.mjs
-function x($) {
-  if (!$ || typeof $ !== "object")
-    return false;
-  if ($.code === "revision-conflict")
-    return true;
-  let V = $ instanceof Error ? $.message : String($);
-  return /revision conflict/i.test(V);
+// ../framework/sdk/runtime/src/collections.ts
+var identifier = /^[A-Za-z][A-Za-z\d_-]*$/;
+var lazySchema = /* @__PURE__ */ (() => strictObject({ kind: literal("collection-field"), collection: string2(), key: string2(), field: string2(), revision: string2() }))();
+function unwrap(schema) {
+  while (schema instanceof ZodOptional || schema instanceof ZodDefault || schema instanceof ZodNullable)
+    schema = schema.unwrap();
+  return schema;
 }
-class R extends Error {
+function lazyAt(schema, parts) {
+  if (schema instanceof ZodOptional)
+    return lazyAt(schema.unwrap(), parts).optional();
+  if (schema instanceof ZodDefault)
+    return lazyAt(schema.unwrap(), parts).optional();
+  if (schema instanceof ZodNullable)
+    return parts.length ? lazyAt(schema.unwrap(), parts).nullable() : lazySchema;
+  if (!parts.length)
+    return lazySchema;
+  const [head, ...tail] = parts;
+  if (schema instanceof ZodRecord && head === "*")
+    return record(schema.keyType, lazyAt(schema.valueType, tail));
+  if (!(schema instanceof ZodObject) || !head || !Object.hasOwn(schema.shape, head))
+    throw new Error(`Lazy field path does not match the state schema: ${parts.join(".")}`);
+  return schema.extend({ [head]: lazyAt(schema.shape[head], tail) });
+}
+function collectionSchemas(state, declarations = {}) {
+  if (Object.keys(declarations).length > 32)
+    throw new Error("A note may declare at most 32 collections");
+  const fields = new Set;
+  return Object.entries(declarations).map(([name, definition]) => {
+    if (!identifier.test(name) || !definition || typeof definition !== "object" || Array.isArray(definition) || Object.keys(definition).some((key) => !["field", "key", "lazy", "visibility"].includes(key)) || definition.visibility !== undefined && !["public", "private"].includes(definition.visibility) || definition.lazy !== undefined && !Array.isArray(definition.lazy))
+      throw new Error("Invalid collection declaration");
+    const field = definition.field ?? name;
+    if (fields.has(field))
+      throw new Error(`Collection state field is declared twice: ${field}`);
+    fields.add(field);
+    if (!(state instanceof ZodObject) || !Object.hasOwn(state.shape, field))
+      throw new Error(`Collection ${name} needs a top-level state array: ${field}`);
+    const array = unwrap(state.shape[field]);
+    if (!(array instanceof ZodArray) || !(array.element instanceof ZodObject))
+      throw new Error(`Collection ${name} must contain objects`);
+    const item = array.element;
+    const lazy = [...definition.lazy ?? []];
+    if (!Object.hasOwn(item.shape, definition.key) || !(item.shape[definition.key] instanceof ZodString))
+      throw new Error(`Collection ${name} requires a string key field`);
+    if (lazy.length > 32 || new Set(lazy).size !== lazy.length || lazy.some((field) => typeof field !== "string" || field === definition.key || !field || field.split(".").some((part) => !part) || lazy.some((other) => other !== field && field.startsWith(other + "."))))
+      throw new Error(`Invalid lazy fields for collection ${name}`);
+    let summary = item;
+    for (const path of lazy)
+      summary = lazyAt(summary, path.split("."));
+    return { name, visibility: definition.visibility ?? "private", contract: { field, key: definition.key, lazy }, item, summary };
+  });
+}
+var generated = new WeakMap;
+
+// ../framework/sdk/runtime/src/store.ts
+function isRevisionConflict(error) {
+  if (!error || typeof error !== "object")
+    return false;
+  if (error.code === "revision-conflict")
+    return true;
+  const message = error instanceof Error ? error.message : String(error);
+  return /revision conflict/i.test(message);
+}
+
+// ../framework/sdk/runtime/src/operation-error.ts
+class OperationRejectedError extends Error {
   code = "operation-rejected";
-  constructor($) {
-    super($);
+  constructor(message) {
+    super(message);
     this.name = "OperationRejectedError";
   }
 }
-function C($) {
-  return `${$}:config`;
-}
-var g = Object.freeze({ scopeLength: 256, nameLength: 128 });
 
-class b extends Error {
+// ../framework/sdk/runtime/src/config.ts
+function noteConfigRef(noteId) {
+  return `${noteId}:config`;
+}
+
+// ../framework/sdk/runtime/src/steps.ts
+var STEP_LIMITS = Object.freeze({ scopeLength: 256, nameLength: 128 });
+
+class StepOutcomeUnknownError extends Error {
   scope;
   stepName;
   code = "step-outcome-unknown";
-  constructor($, V) {
-    super(`Step "${V}" has an unknown outcome; check the original operation's receipt or ask for a decision before retrying`);
-    this.scope = $;
-    this.stepName = V;
+  constructor(scope, stepName) {
+    super(`Step "${stepName}" has an unknown outcome; check the original operation's receipt or ask for a decision before retrying`);
+    this.scope = scope;
+    this.stepName = stepName;
     this.name = "StepOutcomeUnknownError";
   }
 }
-var J = new Map;
-var Q0 = { async claim() {
-  return { supportsStarted: true };
-}, async read($, V) {
-  return J.get($)?.get(V);
-}, async write($, V, H) {
-  let Z = J.get($);
-  if (!Z)
-    J.set($, Z = new Map);
-  Z.set(V, H);
-}, async clear($) {
-  for (let [V, H] of J.get($) ?? [])
-    if (H.started)
-      throw new b($, V);
-  J.delete($);
-} };
-function X0($) {
-  if (typeof $ !== "string" || !$.trim() || $.length > g.scopeLength || /[\0\n]/.test($))
-    throw Error(`A step key must be a nonempty string of at most ${g.scopeLength} characters`);
-  return $;
+var memory = new Map;
+var volatileHost = {
+  async claim() {
+    return { supportsStarted: true };
+  },
+  async read(scope, name) {
+    return memory.get(scope)?.get(name);
+  },
+  async write(scope, name, record) {
+    let rows = memory.get(scope);
+    if (!rows)
+      memory.set(scope, rows = new Map);
+    rows.set(name, record);
+  },
+  async clear(scope) {
+    for (const [name, record] of memory.get(scope) ?? [])
+      if (record.started)
+        throw new StepOutcomeUnknownError(scope, name);
+    memory.delete(scope);
+  }
+};
+function checkStepScope(scope) {
+  if (typeof scope !== "string" || !scope.trim() || scope.length > STEP_LIMITS.scopeLength || /[\0\n]/.test(scope))
+    throw new Error(`A step key must be a nonempty string of at most ${STEP_LIMITS.scopeLength} characters`);
+  return scope;
 }
-function L2($, V, H) {
-  let Z = $ ?? Q0;
-  X0(V);
-  let W = new Set, X, U = () => X ??= Z.claim(V).then((Y) => {
-    if (Y?.supportsStarted !== true)
-      throw Object.assign(Error("This step host cannot preserve unknown outcomes; update the host before running durable steps"), { code: "step-host-unsupported" });
-  }), G = async (Y, M) => {
-    let P = M === undefined ? { value: null, empty: true } : { value: M };
+function createStepRun(host, scope, assertJson) {
+  const steps = host ?? volatileHost;
+  checkStepScope(scope);
+  const used = new Set;
+  let claimed;
+  const claim = () => claimed ??= steps.claim(scope).then((support) => {
+    if (support?.supportsStarted !== true)
+      throw Object.assign(new Error("This step host cannot preserve unknown outcomes; update the host before running durable steps"), { code: "step-host-unsupported" });
+  });
+  const save = async (name, value) => {
+    const record = value === undefined ? { value: null, empty: true } : { value };
     try {
-      H(P.value);
-    } catch (B) {
-      throw Error(`Step "${Y}" must return plain JSON (or nothing)`, { cause: B });
+      assertJson(record.value);
+    } catch (cause) {
+      throw new Error(`Step "${name}" must return plain JSON (or nothing)`, { cause });
     }
-    return await Z.write(V, Y, P), M;
+    await steps.write(scope, name, record);
+    return value;
   };
-  return { step: Object.freeze({ async run(Y, M, P) {
-    if (typeof Y !== "string" || !Y.trim() || Y.length > g.nameLength || /[\0\n]/.test(Y))
-      throw Error(`A step name must be a nonempty string of at most ${g.nameLength} characters`);
-    if (typeof M !== "function")
-      throw Error("ctx.step.run needs a function");
-    if (P?.retry !== undefined && P.retry !== "read-only" && P.retry !== "idempotent")
-      throw Error("Invalid step retry contract");
-    if (W.has(Y))
-      throw Error(`Step "${Y}" already ran in this action; give each step a unique name`);
-    W.add(Y), await U();
-    let B = await Z.read(V, Y, { supportsStarted: true });
-    if (B && !B.started)
-      return B.empty ? undefined : B.value;
-    if (B?.started) {
-      let I = await P?.recover?.();
-      if (I !== undefined) {
-        if (!I || typeof I !== "object" || !("value" in I))
-          throw Error("A step receipt must contain a confirmed value");
-        return G(Y, I.value);
+  const step = {
+    async run(name, fn, recovery) {
+      if (typeof name !== "string" || !name.trim() || name.length > STEP_LIMITS.nameLength || /[\0\n]/.test(name))
+        throw new Error(`A step name must be a nonempty string of at most ${STEP_LIMITS.nameLength} characters`);
+      if (typeof fn !== "function")
+        throw new Error("ctx.step.run needs a function");
+      if (recovery?.retry !== undefined && recovery.retry !== "read-only" && recovery.retry !== "idempotent")
+        throw new Error("Invalid step retry contract");
+      if (used.has(name))
+        throw new Error(`Step "${name}" already ran in this action; give each step a unique name`);
+      used.add(name);
+      await claim();
+      const saved = await steps.read(scope, name, { supportsStarted: true });
+      if (saved && !saved.started)
+        return saved.empty ? undefined : saved.value;
+      if (saved?.started) {
+        const receipt = await recovery?.recover?.();
+        if (receipt !== undefined) {
+          if (!receipt || typeof receipt !== "object" || !("value" in receipt))
+            throw new Error("A step receipt must contain a confirmed value");
+          return save(name, receipt.value);
+        }
+        if (!recovery?.retry)
+          throw new StepOutcomeUnknownError(scope, name);
       }
-      if (!P?.retry)
-        throw new b(V, Y);
+      await steps.write(scope, name, { value: null, started: true });
+      return save(name, await fn());
     }
-    return await Z.write(V, Y, { value: null, started: true }), G(Y, await M());
-  } }), finish: async () => {
-    if (X)
-      await X, await Z.clear(V);
+  };
+  return { step: Object.freeze(step), finish: async () => {
+    if (claimed) {
+      await claimed;
+      await steps.clear(scope);
+    }
   } };
 }
-var c = Symbol.for("worka.note-model.v2");
-var i = Symbol.for("worka.note-background.v2");
-var z = Symbol.for("worka.note-contexts.v2");
-var v = globalThis;
-var A = v[z] ?? new WeakMap;
-if (!v[z])
-  Object.defineProperty(v, z, { value: A });
-function h0($) {
-  O2($.state?.schema, $.collections);
-  let V = Object.freeze({ ...$, ...$.collections ? { collections: K($.collections) } : {}, ...$.state ? { state: Object.freeze({ ...$.state, initial: K($.state.schema.parse($.state.initial)) }) } : {}, ...$.config ? { config: Object.freeze({ ...$.config, defaults: K(k($.config.schema).parse($.config.defaults)) }) } : {} }), H = V.config ? (toJSONSchema(V.config.schema, { io: "input" }).required?.length ?? 0) > 0 : false, Z = { [c]: V, action: (W, X) => N2("action", { ...W, visibility: W.visibility ?? "private", model: Z }, async (U, G) => {
-    let Q = A.get(G);
-    if (Q && (Q.note !== Z || Q.kind !== "action"))
-      throw new R("An action requires its own note’s writable context");
-    if (G = Q?.raw ?? G, W.requiresConfig !== false && H && V.config) {
-      if (!V.config.schema.safeParse((await G.store.read(C(G.note.id))).value).success)
-        throw new R("Complete this note’s configuration before running this action");
+
+// ../framework/sdk/runtime/src/extension-contract.ts
+function extensionMethod(definition) {
+  return Object.freeze({ ...definition });
+}
+function extensionResource(definition) {
+  return Object.freeze({ ...definition });
+}
+async function requestExtension(extensions, definition, input) {
+  const parsed = await definition.input.parseAsync(input);
+  const result = await extensions.request(definition.extension, definition.method, parsed);
+  try {
+    return await parseOutput(definition.output, result);
+  } catch (cause) {
+    throw new Error(`Extension ${definition.extension}.${definition.method} returned invalid output after invocation; inspect effects before retrying`, { cause });
+  }
+}
+async function readExtension(resources, definition, input) {
+  const parsed = await definition.input.parseAsync(input);
+  const snapshot = await resources.read({ name: definition.name, input: json().parse(parsed) });
+  if (snapshot.data === undefined) {
+    const { data: _data, ...empty } = snapshot;
+    return empty;
+  }
+  return { ...snapshot, data: await parseOutput(definition.output, snapshot.data) };
+}
+async function parseOutput(schema, value) {
+  return schema.parseAsync(value);
+}
+
+// ../framework/sdk/runtime/src/provider-contract.ts
+var literals = (fixed = {}) => Object.fromEntries(Object.entries(fixed).map(([key, value]) => [key, literal(value)]));
+function mountProvider(note, contract, options) {
+  if (typeof options?.scope !== "function")
+    throw new Error("Mounting a provider needs a scope function");
+  const scoped = async (context) => contract.scope.parseAsync(await options.scope(context));
+  const pick = (entries, names) => {
+    for (const name of names ?? [])
+      if (!Object.hasOwn(entries, name))
+        throw new Error(`Provider ${contract.extension} has no operation "${name}"`);
+    return Object.entries(entries).filter(([name]) => !names || names.includes(name));
+  };
+  const queries = {}, actions = {};
+  for (const [name, entry] of pick(contract.queries, options.expose?.queries)) {
+    const resource = extensionResource({
+      name: entry.resource ?? `extension.${contract.extension}.${name}`,
+      input: entry.input.extend(contract.scope.shape).extend(literals(entry.fixed)),
+      output: entry.output
+    });
+    queries[name] = note.query({ description: entry.description ?? name, visibility: options.visibility ?? "public", input: entry.input, output: entry.output }, async (context, input) => {
+      const snapshot = await readExtension(context.resources, resource, { ...input, ...entry.fixed, ...await scoped(context) });
+      if (snapshot.data !== undefined)
+        return snapshot.data;
+      throw Object.assign(new Error(snapshot.error || `${contract.extension} returned no data for ${name}`), snapshot.errorCode ? { code: snapshot.errorCode } : {});
+    });
+  }
+  for (const [name, entry] of pick(contract.actions, options.expose?.actions)) {
+    const method = extensionMethod({
+      extension: contract.extension,
+      method: entry.method ?? name,
+      input: entry.input.extend(contract.scope.shape).extend(literals(entry.fixed)),
+      output: entry.output
+    });
+    actions[name] = note.action({ description: entry.description ?? name, visibility: options.visibility ?? "public", input: entry.input, output: entry.output }, async (context, input) => requestExtension(context.host.extensions, method, { ...input, ...entry.fixed, ...await scoped(context) }));
+  }
+  return Object.freeze({ queries: Object.freeze(queries), actions: Object.freeze(actions) });
+}
+
+// ../framework/sdk/runtime/src/note.ts
+var modelKey = Symbol.for("worka.note-model.v2");
+var backgroundKey = Symbol.for("worka.note-background.v2");
+var contextKey = Symbol.for("worka.note-contexts.v2");
+var contextGlobal = globalThis;
+var boundContexts = contextGlobal[contextKey] ?? new WeakMap;
+if (!contextGlobal[contextKey])
+  Object.defineProperty(contextGlobal, contextKey, { value: boundContexts });
+function defineNote(definition) {
+  collectionSchemas(definition.state?.schema, definition.collections);
+  const captured = Object.freeze({
+    ...definition,
+    ...definition.collections ? { collections: freezeJson(definition.collections) } : {},
+    ...definition.state ? { state: Object.freeze({ ...definition.state, initial: freezeJson(definition.state.schema.parse(definition.state.initial)) }) } : {},
+    ...definition.config ? { config: Object.freeze({ ...definition.config, defaults: freezeJson(partialConfig(definition.config.schema).parse(definition.config.defaults)) }) } : {}
+  });
+  const requiredConfig = captured.config ? (toJSONSchema(captured.config.schema, { io: "input" }).required?.length ?? 0) > 0 : false;
+  const note = {
+    [modelKey]: captured,
+    action: (metadata, run) => operation("action", { ...metadata, visibility: metadata.visibility ?? "private", model: note }, async (input, raw) => {
+      const bound = boundContexts.get(raw);
+      if (bound && (bound.note !== note || bound.kind !== "action"))
+        throw new OperationRejectedError("An action requires its own note’s writable context");
+      raw = bound?.raw ?? raw;
+      if (metadata.requiresConfig !== false && requiredConfig && captured.config) {
+        const configured = captured.config.schema.safeParse((await raw.store.read(noteConfigRef(raw.note.id))).value);
+        if (!configured.success)
+          throw new OperationRejectedError("Complete this note’s configuration before running this action");
+      }
+      if (bound?.steps)
+        return run(bindActionContext(note, raw, bound.steps), input);
+      const scope = metadata.steps ? `key:${metadata.steps.key(input)}` : `request:${idempotencyKey(raw)}`;
+      const steps = createStepRun(raw.steps, scope, assertJson);
+      const result = await run(bindActionContext(note, raw, steps), input);
+      await steps.finish();
+      return result;
+    }, true),
+    query: (metadata, run) => operation("query", { ...metadata, visibility: metadata.visibility ?? "public", model: note }, (input, raw) => run(bindQueryContext(note, raw), input), true),
+    event: (metadata) => createEvent({ ...metadata, visibility: metadata.visibility ?? "private", model: note }),
+    mount: (contract, options) => mountProvider(note, contract, options),
+    background: (background) => {
+      const bound = {
+        [backgroundKey]: note,
+        ...background.resources ? { resources: freezeJson(background.resources) } : {},
+        ...background.start ? { start: async (raw) => {
+          const steps = createStepRun(raw.steps, `background:start:${idempotencyKey(raw)}`, assertJson);
+          const result = await background.start(bindActionContext(note, raw, steps));
+          if (result !== undefined)
+            throw new Error("Finite start must not return a cleanup closure or value");
+          await steps.finish();
+        } } : {},
+        ...background.state ? { state: async (raw, snapshot) => {
+          if (!captured.state)
+            throw new Error("A state handler requires a state model");
+          const value = captured.state.schema.parse(snapshot.value);
+          const steps = createStepRun(raw.steps, `background:state:${snapshot.revision}`, assertJson);
+          const result = await background.state(bindActionContext(note, raw, steps), freezeJson({ ...snapshot, value }));
+          if (result !== undefined)
+            throw new Error("Finite state handler must not return a cleanup closure or value");
+          await steps.finish();
+        } } : {}
+      };
+      return Object.freeze(bound);
     }
-    if (Q?.steps)
-      return X(E(Z, G, Q.steps), U);
-    let Y = W.steps ? `key:${W.steps.key(U)}` : `request:${y(G)}`, M = L2(G.steps, Y, D), P = await X(E(Z, G, M), U);
-    return await M.finish(), P;
-  }, true), query: (W, X) => N2("query", { ...W, visibility: W.visibility ?? "public", model: Z }, (U, G) => X(t(Z, G), U), true), event: (W) => l({ ...W, visibility: W.visibility ?? "private", model: Z }), mount: (W, X) => O(Z, W, X), background: (W) => {
-    let X = { [i]: Z, ...W.resources ? { resources: K(W.resources) } : {}, ...W.start ? { start: async (U) => {
-      let G = L2(U.steps, `background:start:${y(U)}`, D);
-      if (await W.start(E(Z, U, G)) !== undefined)
-        throw Error("Finite start must not return a cleanup closure or value");
-      await G.finish();
-    } } : {}, ...W.state ? { state: async (U, G) => {
-      if (!V.state)
-        throw Error("A state handler requires a state model");
-      let Q = V.state.schema.parse(G.value), Y = L2(U.steps, `background:state:${G.revision}`, D);
-      if (await W.state(E(Z, U, Y), K({ ...G, value: Q })) !== undefined)
-        throw Error("Finite state handler must not return a cleanup closure or value");
-      await Y.finish();
-    } } : {} };
-    return Object.freeze(X);
-  } };
-  return Object.freeze(Z);
+  };
+  return Object.freeze(note);
 }
-function F($) {
-  return $ !== null && typeof $ === "object" ? $[c] : undefined;
+function noteDefinition(value) {
+  return value !== null && typeof value === "object" ? value[modelKey] : undefined;
 }
-function n($) {
-  return Object.freeze({ id: $.id, version: $.version ?? "unknown" });
+function identity(raw) {
+  return Object.freeze({ id: raw.id, version: raw.version ?? "unknown" });
 }
-function k($) {
-  if (!($ instanceof ZodObject))
-    throw Error("Config schema must be a Zod object");
-  return $.partial();
+function partialConfig(schema) {
+  if (!(schema instanceof ZodObject))
+    throw new Error("Config schema must be a Zod object");
+  return schema.partial();
 }
-function K($) {
-  D($);
-  let V = (Z) => {
-    if (Z && typeof Z === "object" && !Object.isFrozen(Z))
-      Object.values(Z).forEach(V), Object.freeze(Z);
-  }, H = JSON.parse(JSON.stringify($));
-  return V(H), H;
+function freezeJson(value) {
+  assertJson(value);
+  const freeze = (part) => {
+    if (part && typeof part === "object" && !Object.isFrozen(part)) {
+      Object.values(part).forEach(freeze);
+      Object.freeze(part);
+    }
+  };
+  const copy = JSON.parse(JSON.stringify(value));
+  freeze(copy);
+  return copy;
 }
-function D($) {
-  let V = new Set, H = () => {
-    throw Error("Note data must be finite, plain JSON");
-  }, Z = (W) => {
-    if (W === null || typeof W === "string" || typeof W === "boolean" || typeof W === "number" && Number.isFinite(W))
+function assertJson(value) {
+  const seen = new Set;
+  const invalid = () => {
+    throw new Error("Note data must be finite, plain JSON");
+  };
+  const visit = (part) => {
+    if (part === null || typeof part === "string" || typeof part === "boolean" || typeof part === "number" && Number.isFinite(part))
       return;
-    if (!W || typeof W !== "object")
-      return H();
-    let X = Array.isArray(W), U = Object.getPrototypeOf(W);
-    if (U !== (X ? Array.prototype : Object.prototype) && U !== null)
-      return H();
-    if (Object.getOwnPropertySymbols(W).length)
-      return H();
-    if (V.has(W))
-      throw Error("Note data cannot contain cycles");
-    let G = Object.getOwnPropertyDescriptors(W), Q = Object.hasOwn(G, "toJSON") ? G.toJSON : U && Object.getOwnPropertyDescriptor(U, "toJSON");
-    if (Q && (!Object.hasOwn(Q, "value") || typeof Q.value === "function"))
-      return H();
-    if (V.add(W), X)
-      for (let Y = 0;Y < W.length; Y++) {
-        let M = String(Y), P = Object.hasOwn(G, M) ? G[M] : undefined;
-        if (!P || !Object.hasOwn(P, "value"))
-          return H();
-        Z(P.value);
+    if (!part || typeof part !== "object")
+      return invalid();
+    const array = Array.isArray(part), prototype = Object.getPrototypeOf(part);
+    if (prototype !== (array ? Array.prototype : Object.prototype) && prototype !== null)
+      return invalid();
+    if (Object.getOwnPropertySymbols(part).length)
+      return invalid();
+    if (seen.has(part))
+      throw new Error("Note data cannot contain cycles");
+    const properties = Object.getOwnPropertyDescriptors(part);
+    const toJSON = Object.hasOwn(properties, "toJSON") ? properties.toJSON : prototype && Object.getOwnPropertyDescriptor(prototype, "toJSON");
+    if (toJSON && (!Object.hasOwn(toJSON, "value") || typeof toJSON.value === "function"))
+      return invalid();
+    seen.add(part);
+    if (array) {
+      for (let index = 0;index < part.length; index++) {
+        const key = String(index);
+        const property = Object.hasOwn(properties, key) ? properties[key] : undefined;
+        if (!property || !Object.hasOwn(property, "value"))
+          return invalid();
+        visit(property.value);
       }
-    for (let [Y, M] of Object.entries(G)) {
-      if (X) {
-        if (Y === "length")
+    }
+    for (const [key, property] of Object.entries(properties)) {
+      if (array) {
+        if (key === "length")
           continue;
-        if (!/^(0|[1-9]\d*)$/.test(Y) || Number(Y) >= W.length)
-          return H();
+        if (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= part.length)
+          return invalid();
         continue;
       }
-      if (!M.enumerable || !Object.hasOwn(M, "value"))
-        return H();
-      if (M.value !== undefined)
-        Z(M.value);
+      if (!property.enumerable || !Object.hasOwn(property, "value"))
+        return invalid();
+      if (property.value !== undefined)
+        visit(property.value);
     }
-    V.delete(W);
+    seen.delete(part);
   };
-  Z($);
+  visit(value);
 }
-function Y0($, V, H) {
-  if (!H)
-    throw Error("The declared state has no bound storage");
-  let Z = async () => {
-    let W = await V.read(H);
-    return K({ ...W, value: $.parse(W.value) });
+function writableState(schema, store, ref) {
+  if (!ref)
+    throw new Error("The declared state has no bound storage");
+  const read = async () => {
+    const snapshot = await store.read(ref);
+    return freezeJson({ ...snapshot, value: schema.parse(snapshot.value) });
   };
-  return { read: Z, update: async (W, X) => {
-    for (let U = 1;; U++) {
-      let G = await Z();
-      if (X?.expectedRevision !== undefined && G.revision !== X.expectedRevision)
-        throw Object.assign(Error("State revision conflict"), { code: "revision-conflict" });
-      let Q = structuredClone(G.value), Y = W(Q);
-      if (Y !== undefined) {
-        if (Y && typeof Y.then === "function")
-          Promise.resolve(Y).catch(() => {
+  return { read, update: async (change, options) => {
+    for (let attempt = 1;; attempt++) {
+      const current = await read();
+      if (options?.expectedRevision !== undefined && current.revision !== options.expectedRevision)
+        throw Object.assign(new Error("State revision conflict"), { code: "revision-conflict" });
+      const draft = structuredClone(current.value);
+      const result = change(draft);
+      if (result !== undefined) {
+        if (result && typeof result.then === "function")
+          Promise.resolve(result).catch(() => {
             return;
           });
-        throw Error("State update callbacks must be synchronous and return nothing");
+        throw new Error("State update callbacks must be synchronous and return nothing");
       }
-      let M = $.parse(Q);
-      if (D(M), JSON.stringify(M) === JSON.stringify(G.value))
-        return G;
+      const value = schema.parse(draft);
+      assertJson(value);
+      if (JSON.stringify(value) === JSON.stringify(current.value))
+        return current;
       try {
-        let P = { baseRevision: G.revision, patch: {}, ops: [{ path: [], value: M }] };
-        if (!V.update)
-          throw Error("Read-only note context cannot update state");
-        let B = await V.update(H, P);
-        return K({ ...B, value: $.parse(B.value) });
-      } catch (P) {
-        if (X?.expectedRevision !== undefined || U >= 8 || !x(P))
-          throw P;
+        const request = { baseRevision: current.revision, patch: {}, ops: [{ path: [], value }] };
+        if (!store.update)
+          throw new Error("Read-only note context cannot update state");
+        const saved = await store.update(ref, request);
+        return freezeJson({ ...saved, value: schema.parse(saved.value) });
+      } catch (error) {
+        if (options?.expectedRevision !== undefined || attempt >= 8 || !isRevisionConflict(error))
+          throw error;
       }
     }
   } };
 }
-function o($, V, H) {
-  let Z = F($);
-  if (!Z)
-    throw Error("Missing executable note model");
-  let W = {};
-  for (let X of ["state", "config"]) {
-    let U = Z[X];
-    if (!U)
+function stateParts(note, raw, writable) {
+  const definition = noteDefinition(note);
+  if (!definition)
+    throw new Error("Missing executable note model");
+  const parts = {};
+  for (const kind of ["state", "config"]) {
+    const data = definition[kind];
+    if (!data)
       continue;
-    let G = X === "state" ? typeof V.note.stateRef === "string" ? V.note.stateRef : V.note.stateRef?.id : C(V.note.id), Q = Y0(X === "state" ? U.schema : k(U.schema), V.store, G);
-    W[X] = Object.freeze(H ? Q : { read: Q.read });
+    const ref = kind === "state" ? typeof raw.note.stateRef === "string" ? raw.note.stateRef : raw.note.stateRef?.id : noteConfigRef(raw.note.id);
+    const access = writableState(kind === "state" ? data.schema : partialConfig(data.schema), raw.store, ref);
+    parts[kind] = Object.freeze(writable ? access : { read: access.read });
   }
-  return W;
+  return parts;
 }
-function y($) {
-  return $.caller?.requestId ?? `execution:${$.caller?.id ?? crypto.randomUUID()}`;
+function idempotencyKey(raw) {
+  return raw.caller?.requestId ?? `execution:${raw.caller?.id ?? crypto.randomUUID()}`;
 }
-function E($, V, H) {
-  let Z = A.get(V);
-  if (Z) {
-    if (Z.note !== $ || Z.kind !== "action")
-      throw new R("An action requires its own note’s writable context");
-    return V;
+function bindActionContext(note, raw, steps) {
+  const bound = boundContexts.get(raw);
+  if (bound) {
+    if (bound.note !== note || bound.kind !== "action")
+      throw new OperationRejectedError("An action requires its own note’s writable context");
+    return raw;
   }
-  let { agent: W, schedules: X, notifications: U, previews: G, extensions: Q, quip: Y, slack: M, subprocess: P } = V, B = y(V), I = H ?? L2(V.steps, `request:${B}`, D), m = Object.freeze({ note: n(V.note), id: () => crypto.randomUUID(), caller: V.caller, idempotencyKey: B, step: I.step, ...V.replay ? { replay: true } : {}, signal: V.signal, progress: V.progress, db: V.db, files: V.files, notes: V.notes, resources: V.resources, events: V.events, host: Object.freeze({ agent: W, schedules: X, notifications: U, previews: G, extensions: Q, quip: Y, slack: M, subprocess: P }), ...o($, V, true) });
-  return A.set(m, { note: $, raw: V, kind: "action", steps: I }), m;
-}
-function t($, V) {
-  let H = A.get(V);
-  if (H) {
-    if (H.note !== $)
-      throw new R("A bound context belongs to another note model");
-    if (H.kind === "query")
-      return V;
-    V = H.raw;
-  }
-  let Z = Object.freeze({ note: n(V.note), signal: V.signal, db: Object.freeze({ read: V.db?.read?.bind(V.db), list: V.db?.list?.bind(V.db), stats: V.db?.stats?.bind(V.db) }), files: V.files && Object.freeze({ info: V.files.info.bind(V.files), read: V.files.read.bind(V.files) }), notes: Object.freeze({ lookup: V.notes?.lookup?.bind(V.notes), read: V.notes?.read?.bind(V.notes), query: V.notes?.query?.bind(V.notes) }), resources: Object.freeze({ read: V.resources?.read?.bind(V.resources) }), host: Object.freeze({ previews: V.previews && Object.freeze({ get: V.previews.get?.bind(V.previews), list: V.previews.list?.bind(V.previews) }) }), ...o($, V, false) });
-  return A.set(Z, { note: $, raw: V, kind: "query" }), Z;
-}
-var U0 = /^[A-Za-z][A-Za-z\d_-]*$/;
-var M0 = (() => strictObject({ cursor: string2().max(32768).optional(), limit: number2().int().min(1).max(100).optional(), maxBytes: number2().int().min(256).max(1048576).optional() }))();
-var j0 = (() => strictObject({ key: string2().min(1).max(512), field: string2().min(1).max(2048), revision: string2().min(1) }))();
-var P0 = (() => strictObject({ key: string2().min(1).max(512), revision: string2().optional() }))();
-var a = (() => strictObject({ kind: literal("collection-field"), collection: string2(), key: string2(), field: string2(), revision: string2() }))();
-function B0($) {
-  while ($ instanceof ZodOptional || $ instanceof ZodDefault || $ instanceof ZodNullable)
-    $ = $.unwrap();
-  return $;
-}
-function _($, V) {
-  if ($ instanceof ZodOptional)
-    return _($.unwrap(), V).optional();
-  if ($ instanceof ZodDefault)
-    return _($.unwrap(), V).optional();
-  if ($ instanceof ZodNullable)
-    return V.length ? _($.unwrap(), V).nullable() : a;
-  if (!V.length)
-    return a;
-  let [H, ...Z] = V;
-  if ($ instanceof ZodRecord && H === "*")
-    return record($.keyType, _($.valueType, Z));
-  if (!($ instanceof ZodObject) || !H || !Object.hasOwn($.shape, H))
-    throw Error(`Lazy field path does not match the state schema: ${V.join(".")}`);
-  return $.extend({ [H]: _($.shape[H], Z) });
-}
-function O2($, V = {}) {
-  if (Object.keys(V).length > 32)
-    throw Error("A note may declare at most 32 collections");
-  let H = new Set;
-  return Object.entries(V).map(([Z, W]) => {
-    if (!U0.test(Z) || !W || typeof W !== "object" || Array.isArray(W) || Object.keys(W).some((M) => !["field", "key", "lazy"].includes(M)) || W.lazy !== undefined && !Array.isArray(W.lazy))
-      throw Error("Invalid collection declaration");
-    let X = W.field ?? Z;
-    if (H.has(X))
-      throw Error(`Collection state field is declared twice: ${X}`);
-    if (H.add(X), !($ instanceof ZodObject) || !Object.hasOwn($.shape, X))
-      throw Error(`Collection ${Z} needs a top-level state array: ${X}`);
-    let U = B0($.shape[X]);
-    if (!(U instanceof ZodArray) || !(U.element instanceof ZodObject))
-      throw Error(`Collection ${Z} must contain objects`);
-    let G = U.element, Q = [...W.lazy ?? []];
-    if (!Object.hasOwn(G.shape, W.key) || !(G.shape[W.key] instanceof ZodString))
-      throw Error(`Collection ${Z} requires a string key field`);
-    if (Q.length > 32 || new Set(Q).size !== Q.length || Q.some((M) => typeof M !== "string" || M === W.key || !M || M.split(".").some((P) => !P) || Q.some((P) => P !== M && M.startsWith(P + "."))))
-      throw Error(`Invalid lazy fields for collection ${Z}`);
-    let Y = G;
-    for (let M of Q)
-      Y = _(Y, M.split("."));
-    return { name: Z, contract: { field: X, key: W.key, lazy: Q }, item: G, summary: Y };
+  const { agent, schedules, notifications, previews, extensions, quip, slack, subprocess } = raw;
+  const key = idempotencyKey(raw);
+  const run = steps ?? createStepRun(raw.steps, `request:${key}`, assertJson);
+  const context = Object.freeze({
+    note: identity(raw.note),
+    id: () => crypto.randomUUID(),
+    caller: raw.caller,
+    idempotencyKey: key,
+    step: run.step,
+    ...raw.replay ? { replay: true } : {},
+    signal: raw.signal,
+    progress: raw.progress,
+    db: raw.db,
+    files: raw.files,
+    notes: raw.notes,
+    resources: raw.resources,
+    events: raw.events,
+    host: Object.freeze({ agent, schedules, notifications, previews, extensions, quip, slack, subprocess }),
+    ...stateParts(note, raw, true)
   });
+  boundContexts.set(context, { note, raw, kind: "action", steps: run });
+  return context;
 }
-var e = new WeakMap;
-var f = Symbol.for("worka.note-capability");
-function N2($, V, H, Z = false) {
-  let W = async (G, Q) => {
-    let Y = await H(G, Q), M = await X.output.safeParseAsync(Y);
-    if (!M.success)
-      throw Error(`Capability output is invalid after execution; inspect effects before retrying: ${M.error.message}`);
-    return M.data;
-  }, X = Object.freeze({ ...V, kind: $, execute: W }), U = Z ? async (G, Q) => W(await X.input.parseAsync(Q), G) : async (G, Q) => W(await X.input.parseAsync(G), Q);
-  return Object.defineProperty(U, f, { value: X }), U;
+function bindQueryContext(note, raw) {
+  const bound = boundContexts.get(raw);
+  if (bound) {
+    if (bound.note !== note)
+      throw new OperationRejectedError("A bound context belongs to another note model");
+    if (bound.kind === "query")
+      return raw;
+    raw = bound.raw;
+  }
+  const context = Object.freeze({
+    note: identity(raw.note),
+    signal: raw.signal,
+    db: Object.freeze({ read: raw.db?.read?.bind(raw.db), list: raw.db?.list?.bind(raw.db), stats: raw.db?.stats?.bind(raw.db) }),
+    files: raw.files && Object.freeze({ info: raw.files.info.bind(raw.files), read: raw.files.read.bind(raw.files) }),
+    notes: Object.freeze({ lookup: raw.notes?.lookup?.bind(raw.notes), read: raw.notes?.read?.bind(raw.notes), query: raw.notes?.query?.bind(raw.notes) }),
+    resources: Object.freeze({ read: raw.resources?.read?.bind(raw.resources) }),
+    host: Object.freeze({ previews: raw.previews && Object.freeze({ get: raw.previews.get?.bind(raw.previews), list: raw.previews.list?.bind(raw.previews) }) }),
+    ...stateParts(note, raw, false)
+  });
+  boundContexts.set(context, { note, raw, kind: "query" });
+  return context;
 }
-function l($) {
-  let V = Object.freeze({ ...$, kind: "event", output: $.payload }), H = { name: $.name, publish(Z, W, X) {
-    return Z.events.publish(V.name, W, X);
-  } };
-  return Object.defineProperty(H, f, { value: V }), Object.freeze(H);
-}
-var H0 = /^note-file:[a-f0-9]{64}$/;
-var u = (() => object({ id: string2().regex(H0) }))();
-
-// node_modules/@dsh-workbench/runtime/dist/chunk-q83wvq7f.mjs
-var E2 = Symbol.for("worka.preview.project");
-
+// ../framework/sdk/runtime/src/preview-project.mjs
+var compiled = Symbol.for("worka.preview.project");
+// ../framework/sdk/runtime/src/note-files.ts
+var NOTE_FILE_MAX_BYTES = 4 * 1024 * 1024;
+// ../framework/sdk/runtime/src/display-budget.ts
+var DISPLAY_JSON_BYTES = 1024 * 1024;
 // model.ts
 var chatSchema = object({ id: string2(), name: string2(), type: _enum(["private", "group"]) });
 var handlingSchema = object({ status: _enum(["followed", "skipped"]), reason: string2(), task: object({ noteId: string2(), objectId: string2() }).optional(), recordedAt: number2() });
@@ -6551,7 +6672,7 @@ var inboxSchema = object({
   chats: array(chatSchema.extend({ count: number2(), latest: messageSchema.nullable() }))
 });
 var statusSchema = object({ enabled: boolean2(), paused: boolean2(), error: string2().nullable(), nextRunAt: number2().nullable(), selectedCount: number2().int().nonnegative(), authorized: boolean2(), automatic: boolean2(), since: number2() });
-var note = h0({});
+var note = defineNote({});
 var relatedTaskSchema = object({ noteId: string2(), delegationId: string2(), title: string2(), status: string2(), archived: boolean2(), summary: string2(), replySuggestion: string2(), revision: string2(), messageIds: array(string2()) });
 
 // actions.ts
@@ -6559,6 +6680,12 @@ var background = note.background({ async start(ctx) {
   await ctx.host.extensions.request("wechat", "bind");
 } });
 var queries = {
+  connection: note.query({ description: "本机界面检查微信便笺是否已初始化，不读取消息。", input: object({}), output: object({ initialized: boolean2() }) }, async (ctx) => {
+    const snapshot = await ctx.resources.read({ name: "extension.wechat.connection", input: {} });
+    if (snapshot.error || !snapshot.data)
+      throw Error(snapshot.error ?? "无法检查微信连接");
+    return snapshot.data;
+  }),
   status: note.query({ visibility: "public", description: "读取微信接入状态：读取开关、暂停、错误、已选数量和 AI 授权/自动处理状态；不含消息。", input: object({}), output: statusSchema }, async (ctx, input) => {
     const snapshot = await ctx.resources.read({ name: "extension.wechat.status", input });
     if (snapshot.error || !snapshot.data)
