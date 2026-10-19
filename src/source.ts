@@ -37,7 +37,7 @@ export class LocalMcp implements Reader {
         throw error;
       }));
       if(config.key_config)await access(config.key_config).catch(error=>{
-        if(error.code==='ENOENT')throw new RuntimeSetupError('本机微信读取授权尚未完成。请先在这台 Mac 登录微信，再打开设置指引完成读取授权。');
+        if(error.code==='ENOENT')throw new RuntimeSetupError('本机微信读取初始化尚未完成，请打开设置指引继续。');
         throw error;
       });
       const ready=new Promise<void>((resolve,reject)=>{this.ready={resolve,reject};});

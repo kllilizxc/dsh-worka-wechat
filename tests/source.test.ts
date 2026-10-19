@@ -13,12 +13,12 @@ test('a missing local runtime gives an actionable setup error without starting a
   expect(spawned).toBe(false);
   await client.close();
 });
-test('missing native read authorization is distinguished without reading credentials or starting a process',async()=>{
+test('missing native initialization is distinguished without inferring a denied system permission',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'wechat-unconfigured-'));
   const config=join(dir,'runtime.json');await writeFile(config,JSON.stringify({python:'/unused/python',project:dir,key_config:join(dir,'native-authorization.json')}));
   let spawned=false;
   const client=new LocalMcp({subprocess:{spawn:async()=>{spawned=true;throw Error('unexpected');}}} as any,'/unused/bridge',config);
-  try {await expect(client.call('status',{})).rejects.toThrow('本机微信读取授权尚未完成');expect(spawned).toBe(false);}
+  try {await expect(client.call('status',{})).rejects.toThrow('本机微信读取初始化尚未完成');expect(spawned).toBe(false);}
   finally {await client.close();await rm(dir,{recursive:true,force:true});}
 });
 test('provider uses one DSH-owned process range without a second host sandbox',async()=>{
