@@ -1,3 +1,4 @@
+import {readKey,unreadSince,advanceRead} from './chat-order';
 import {z} from '@dsh-workbench/runtime';
 import {note,chatSchema,messageSchema,inboxSchema,handlingSchema,relatedTaskSchema,statusSchema} from './model';
 export {note} from './model';
@@ -29,7 +30,15 @@ export const queries={
   }),
   inbox:note.query({visibility:'private',description:'所属便笺读取会话及本机历史摘要；连线用 status/chats 获取接入信息。',input:z.object({}),output:inboxSchema},async(ctx,input)=>{
     const snapshot=await ctx.resources.read({name:'extension.wechat.inbox',input});
-    if(snapshot.error||!snapshot.data)throw Error(snapshot.error??'尚未连接微信');return snapshot.data as z.infer<typeof inboxSchema>;
+    if(snapshot.error||!snapshot.data)throw Error(snapshot.error??'尚未连接微信');
+    const data=snapshot.data as Omit<z.infer<typeof inboxSchema>,'chats'>&{chats:Omit<z.infer<typeof inboxSchema>['chats'][number],'unread'>[]};
+    const chats=await Promise.all(data.chats.map(async chat=>{
+      const readThrough=await ctx.db.read<number>(readKey(chat.id))??0;
+      const messages=await ctx.resources.read({name:'extension.wechat.messages',input:{chatId:chat.id}});
+      if(messages.error||!messages.data)throw Error(messages.error??'尚未读取消息');
+      return {...chat,unread:unreadSince((messages.data as {messages:z.infer<typeof messageSchema>[]}).messages,readThrough)};
+    }));
+    return {...data,chats};
   }),
   messages:note.query({visibility:'private',description:'所属便笺读取已选会话的本机保留消息，含历史；连线使用 context 授权投影。',input:z.object({chatId:z.string()}),output:z.object({chat:chatSchema,messages:z.array(messageSchema)})},async(ctx,input)=>{
     const snapshot=await ctx.resources.read({name:'extension.wechat.messages',input});
@@ -49,3 +58,11 @@ export const recordHandling=note.action({visibility:'public',description:'回写
 export const events={
   changed:note.event({visibility:'public',name:'items.changed',description:'已授权已选微信会话出现新文字消息；根据稳定会话与消息 ID 按需读取。',objectRef:'/itemId',objectLabel:'/title',revision:'/revision',payload:z.object({itemId:z.string(),title:z.string(),messageId:z.string(),revision:z.string()})}),
 };
+
+export const markRead=note.action({visibility:'private',description:'记录本便笺中已查看的消息位置，不改变微信客户端已读状态。',input:z.object({chatId:z.string(),messageId:z.string().regex(/^\d+$/)}),output:z.object({readThrough:z.number()})},async(ctx,input)=>{
+  const snapshot=await ctx.resources.read({name:'extension.wechat.messages',input:{chatId:input.chatId}});
+  if(snapshot.error||!snapshot.data)throw Error(snapshot.error??'尚未读取消息');
+  if(!(snapshot.data as {messages:z.infer<typeof messageSchema>[]}).messages.some(message=>message.id===input.messageId))throw Error('消息不属于当前会话，请重新读取。');
+  const readThrough=await ctx.db.update<number>(readKey(input.chatId),current=>advanceRead(current,input.messageId));
+  return {readThrough};
+});

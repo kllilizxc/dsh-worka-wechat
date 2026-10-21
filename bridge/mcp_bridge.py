@@ -6,8 +6,6 @@ import os
 import sys
 from pathlib import Path
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
 
 TOOLS = frozenset({'status', 'sessions', 'timeline', 'read_events'})
 
@@ -26,6 +24,21 @@ def payload(result):
     return {'ok': False, 'error': {'code': 'invalid_result'}}
 
 
+def read_scope(tool, args, data):
+    if tool != 'read_events' or args.get('talker') or args.get('chat'):
+        return data
+    # Global discovery crosses the bridge as identifiers and paging metadata only.
+    # Unselected previews, contact names and sender information stay in the reader.
+    return {
+        'cursor': data.get('cursor'),
+        'query': data.get('query'),
+        'events': [
+            {'session': {'username': event.get('session', {}).get('username')}}
+            for event in data.get('events', [])
+        ],
+    }
+
+
 def identity():
     # Identity separates cursors across accounts without returning an account ID or key.
     config = json.loads((Path.home() / '.config/wxcli/config.json').read_text())
@@ -37,6 +50,9 @@ def emit(value):
 
 
 async def main():
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
     config = json.loads(Path(sys.argv[1]).read_text())
     env = os.environ.copy()
     env.update({
@@ -69,7 +85,7 @@ async def main():
                         if identity() != account:
                             emit({'id': rid, 'ok': False, 'code': 'account_changed'})
                         elif result.get('ok') is True:
-                            emit({'id': rid, 'ok': True, 'identity': account, 'data': result.get('data', {})})
+                            emit({'id': rid, 'ok': True, 'identity': account, 'data': read_scope(req['tool'], req.get('input', {}), result.get('data', {}))})
                         else:
                             # Upstream messages may contain local paths, names or plaintext; never forward errors.
                             emit({'id': rid, 'ok': False, 'code': 'read_failed'})

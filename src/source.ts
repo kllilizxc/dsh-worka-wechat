@@ -9,6 +9,7 @@ export type ReadResult = {identity:string; data:any};
 export interface Reader {call(tool:Tool,input:Record<string,unknown>,signal?:AbortSignal):Promise<ReadResult>; close():Promise<void>}
 export const READ_TOOLS = new Set<Tool>(['status','sessions','timeline','read_events']);
 export const READ_ERROR = '读取微信失败，请确认这台 Mac 的微信已登录。若升级后仍失败，需要重新验证本机读取组件。';
+export class IdentityError extends Error {}
 
 /** DSH owns the process; the outer OS sandbox also denies networking to MCP and CLI descendants. */
 export class LocalMcp implements Reader {
@@ -50,7 +51,7 @@ export class LocalMcp implements Reader {
             const entry=this.pending.get(row.id);if(!entry)continue;
             this.pending.delete(row.id);
             if(row.ok===true&&typeof row.identity==='string')entry.resolve({identity:row.identity,data:row.data});
-            else entry.reject(new Error(row.code==='account_changed'?'微信账号已变化，请重新选择会话。':READ_ERROR));
+            else entry.reject(row.code==='account_changed'?new IdentityError('微信账号已变化，请重新选择会话。'):new Error(READ_ERROR));
           }catch{this.fail();void child.kill('SIGTERM');}
         }
       };

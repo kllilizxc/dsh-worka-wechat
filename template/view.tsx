@@ -1,3 +1,6 @@
+import {RelatedRecords} from './record-links';
+import {useLocation} from '@dsh-workbench/react';
+import {latestFirst} from './chat-order';
 import {useEffect,useLayoutEffect,useRef,useState,Fragment,type ReactNode} from 'react';
 import {Button,SearchField,ScrollShadow} from '@heroui/react';
 import {useNote,withNotePrerequisites,NoteIcon,NoteGuidance} from '@dsh-workbench/react';
@@ -31,7 +34,8 @@ function MessageList({children}:{children:ReactNode}){
 }
 
 function View(){
-  const {metadata,mode,host,actions,useQuery,focus}=useNote<typeof import('./actions')>();
+  const {metadata,mode,host,actions,useQuery,layout}=useNote<typeof import('./actions')>();
+  const {recordId:focus,requestId}=useLocation();
   const [managing,setManaging]=useState(focus==='sessions');
   const [selected,setSelected]=useState<string|null>(null);
   const [keyword,setKeyword]=useState('');
@@ -39,15 +43,35 @@ function View(){
   const [pending,setPending]=useState<Chat[]|null>(null);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
-  useEffect(()=>{if(focus==='sessions'&&mode==='expanded')setManaging(true);},[focus,mode]);
+  useEffect(()=>{if(!focus||mode!=='expanded')return;setManaging(focus==='sessions');if(focus!=='sessions'){setSelected(focus);setKeyword('');setOffset(0);}},[focus,requestId,mode]);
   const inbox=useQuery('inbox',{});
   const routing=useQuery('routing',{});
   const data=inbox.data;
-  const chats=data?.chats??[];
-  const chat=chats.find(row=>row.id===selected)??chats[0];
+  const chats=latestFirst(data?.chats??[]);
+  const chat=chats.find(row=>row.id===selected)??(selected===focus?undefined:chats[0]);
   const messages=useQuery('messages',{chatId:chat?.id??''},{enabled:mode==='expanded'&&!managing&&!!chat});
   const related=useQuery('related',{id:chat?.id??''},{enabled:mode==='expanded'&&!managing&&!!chat});
   const sessions=useQuery('sessions',{keyword,offset},{enabled:mode==='expanded'&&managing});
+  useEffect(()=>{
+    if(mode==='expanded'&&!managing&&!selected&&layout.width>600&&chats[0])setSelected(chats[0].id);
+  },[mode,managing,selected,layout.width,chats[0]?.id]);
+  useEffect(()=>{if(!focus||focus==='sessions'||chat?.id!==focus||managing||mode!=='expanded')return;const target=document.querySelector<HTMLElement>('[data-location-chat]');target?.scrollIntoView({block:'start'});target?.focus({preventScroll:true});},[focus,requestId,chat?.id,managing,mode]);
+  const lastMessage=messages.data?.messages.at(-1);
+  const readThrough=useRef(new Map<string,string>());
+  useEffect(()=>{
+    if(mode!=='expanded'||managing||(!selected&&layout.width<=600)||messages.loading||messages.stale||messages.error||!lastMessage||!chat||messages.data?.chat.id!==chat.id)return;
+    const id=chat.id,messageId=lastMessage.id;
+    const mark=()=>{
+      if(document.visibilityState==='hidden'||readThrough.current.get(id)===messageId)return;
+      readThrough.current.set(id,messageId);
+      void actions.markRead({chatId:id,messageId}).catch(()=>{
+        if(readThrough.current.get(id)===messageId)readThrough.current.delete(id);
+        // Keep the durable unread indicator until a read receipt succeeds.
+      });
+    };
+    mark();document.addEventListener('visibilitychange',mark);
+    return()=>document.removeEventListener('visibilitychange',mark);
+  },[mode,managing,selected,layout.width,chat?.id,lastMessage?.id,messages.loading,messages.stale,messages.error,actions]);
   const enabled=data?.enabled===true;
   const status=data?.paused?'已暂停':data?.error?'读取受阻':enabled?'读取中':'已暂停';
   const failure=error||inbox.error?.message||routing.error?.message||data?.error||'';
@@ -61,13 +85,14 @@ function View(){
   if(mode==='compact')return <section className="wechat compact">
     <header>{identity}<span className={'wechat-status '+(failure?'error':'')}>{failure?'读取受阻':status}</span></header>
     {!data&&!inbox.error?<p className="compact-empty">正在连接本机微信…</p>:!chats.length?<div className="compact-empty"><strong>选择会话</strong><p>自动读取所选会话的新消息。</p><Button size="sm" variant="secondary" onPress={()=>host.openNote(metadata.id,'sessions')}>选择会话</Button></div>:<>
-      <div className="compact-chats">{[...chats].sort((a,b)=>(b.latest?.time??0)-(a.latest?.time??0)).slice(0,3).map(row=><div key={row.id} className="compact-chat"><strong>{row.name}</strong><span>{text(row.latest)}</span></div>)}</div>
+      <div className="compact-chats">{chats.slice(0,3).map(row=><div key={row.id} className="compact-chat"><strong>{row.unread&&<span className="unread-dot" role="img" aria-label="本便笺未读"/>}{row.name}</strong><span>{text(row.latest)}</span></div>)}</div>
       <footer><span>{chats.length} 个会话 · 只读</span>{failure?<Button size="sm" variant="ghost" onPress={()=>host.openNote(metadata.id)}>查看原因</Button>:<span>展开查看消息</span>}</footer>
     </>}
     {inbox.error&&!data&&<Button size="sm" variant="secondary" onPress={()=>host.openSetup()}>检查连接</Button>}
   </section>;
 
   return <section className="wechat expanded">
+    {focus&&focus!=="sessions"&&selected===focus&&!inbox.loading&&(inbox.error?<p role="alert">目标会话读取失败：{inbox.error.message}</p>:!chats.some(row=>row.id===focus)&&<p role="alert">目标会话不存在或已不在授权选择范围内。</p>)}
     <header className="wechat-header">{identity}<div className="wechat-toolbar" role="toolbar" aria-label="微信便笺操作">
       <span className={'wechat-status '+(failure?'error':'')}>{status}</span>
       <Button variant="ghost" isDisabled={busy} onPress={()=>run(()=>actions.setEnabled({enabled:!enabled}))}>{enabled?'暂停读取':'恢复读取'}</Button>
@@ -91,12 +116,13 @@ function View(){
       </ScrollShadow>
       <footer className="manage-footer"><div><Button variant="ghost" isDisabled={offset===0||sessions.loading} onPress={()=>setOffset(Math.max(0,offset-50))}>上一页</Button><Button variant="ghost" isDisabled={!sessions.data?.hasMore||sessions.loading} onPress={()=>setOffset(offset+50)}>下一页</Button></div><Button variant="primary" isDisabled={busy} onPress={()=>void save()}>{busy?'保存中…':chosen.length?'保存并读取':'清除已选会话'}</Button></footer>
     </section>:!chats.length?<div className="wechat-guidance"><NoteGuidance title="选择会话" description="保持微信登录，自动读取所选会话。" action={{label:'选择会话',onPress:manage}}/></div>:<div className={'wechat-columns '+(selected?'has-selection':'')}>
-      <ScrollShadow className="chat-list" aria-label="正在跟踪的会话">{chats.map(row=><Button key={row.id} variant={chat?.id===row.id?'secondary':'ghost'} className="chat-row" aria-current={chat?.id===row.id} onPress={()=>setSelected(row.id)}><span className="chat-avatar" aria-hidden="true">{row.name.slice(0,1)}</span><span className="chat-row-text"><strong>{row.name}</strong><span>{text(row.latest)}</span></span>{row.latest&&<time>{clock(row.latest.time)}</time>}</Button>)}</ScrollShadow>
+      <ScrollShadow className="chat-list" aria-label="正在跟踪的会话">{chats.map(row=><Button key={row.id} variant={chat?.id===row.id?'secondary':'ghost'} className="chat-row" aria-current={chat?.id===row.id} onPress={()=>setSelected(row.id)}><span className="chat-avatar" aria-hidden="true">{row.name.slice(0,1)}</span><span className="chat-row-text"><strong>{row.name}{row.unread&&<span className="unread-dot" role="img" aria-label="本便笺未读"/>}</strong><span>{text(row.latest)}</span></span>{row.latest&&<time>{clock(row.latest.time)}</time>}</Button>)}</ScrollShadow>
       <article className="conversation">
-        <header className="conversation-header"><Button className="back-chats" variant="ghost" onPress={()=>setSelected(null)}>返回会话</Button><div><h1>{chat?.name}</h1><p>只读</p></div></header>
+        <header className="conversation-header" data-location-chat={chat?.id} tabIndex={-1}><Button className="back-chats" variant="ghost" onPress={()=>setSelected(null)}>返回会话</Button><div><h1>{chat?.name}</h1><p>只读</p></div></header>
         <MessageList key={`${chat?.id}:${selected??''}`}>
           {messages.loading&&!messages.data&&<p role="status">正在读取消息…</p>}
           {messages.error&&<p role="alert">{messages.error.message}</p>}
+          {chat&&<RelatedRecords recordId={chat.id}/>}
           {related.error&&<p role="alert">关联任务结果暂时无法读取。<Button variant="ghost" onPress={()=>void related.refresh()}>重试</Button></p>}
           {!messages.loading&&!messages.error&&!messages.data?.messages.length&&<p className="message-empty">暂无消息</p>}
           {messages.data?.messages.map((row,index,rows)=>{

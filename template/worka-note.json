@@ -3,8 +3,9 @@
   "name": "微信",
   "scenarios": "在本机查看已选私聊和群聊的新文字消息。",
   "icon": {
-    "type": "emoji",
-    "value": "💬"
+    "type": "svg",
+    "path": "icon.svg",
+    "monochrome": false
   },
   "files": [
     "worka-source.json",
@@ -15,7 +16,8 @@
     "task.tsx",
     "style.css",
     "SKILL.md",
-    "README.md"
+    "README.md",
+    "chat-order.ts"
   ],
   "onboarding": {
     "title": "接入本机微信",

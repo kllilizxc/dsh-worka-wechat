@@ -13,26 +13,26 @@ class FakeReader implements Reader {
   identity='account-1';cursor='c1';closed=false;fail=false;calls:Array<{tool:Tool;input:any}>=[];
   messages=[row(1)];events:any[]=[];hasMore=false;
   async call(tool:Tool,input:any,signal?:AbortSignal){signal?.throwIfAborted();this.calls.push({tool,input});if(this.fail)throw Error('读取失败');
-    const data=tool==='status'?{status:{live_read_ok:true}}:tool==='timeline'?{messages:this.messages}:tool==='read_events'?{cursor:this.cursor,events:this.events.map(message=>({message})),query:{has_more:this.hasMore}}:{sessions:[]};
+    const data=tool==='status'?{status:{live_read_ok:true}}:tool==='timeline'?{messages:this.messages}:tool==='read_events'&&!input.talker?{cursor:'session:synthetic',events:this.events.length?['test-private','synthetic-group@chatroom','filehelper'].map(username=>({session:{username}})):[],query:{has_more:false}}:tool==='read_events'?{cursor:this.cursor,events:this.events.map(message=>({message})),query:{has_more:this.hasMore}}:{sessions:[]};
     return {identity:this.identity,data};
   }
   async close(){this.closed=true;}
 }
 async function setup(){
   const dir=await mkdtemp(join(tmpdir(),'wechat-unit-'));dirs.push(dir);
-  const reader=new FakeReader();const metadata=new Map();let paused=false,desktop=true;
+  const reader=new FakeReader();const metadata=new Map();let paused=false,desktop=true,at=Date.now();
   const host:any={dataRoot:dir,app:{records:()=>({read:async(key:string)=>metadata.get(key),write:async(key:string,value:any)=>{metadata.set(key,{value});}}),
     core:{getNote:async()=>({value:{id:'note',desktopId:'desktop',followingPaused:paused,codeVersion:'fixture-code'}}),desktopRunnable:async()=>desktop},
     synchronizers:{refresh:async()=>{await backend.tick();}}}};
-  const backend=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')));await backend.start();
+  const backend=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')),()=>at);await backend.start();
   const user={kind:'user' as const,noteId:'note'};
   await backend.invoke('bind',{},user);await backend.invoke('select',{chats:[chat]},user);await backend.invoke('enable',{enabled:true},user);
-  return {dir,reader,backend,host,user,metadata,setPaused:(value:boolean)=>{paused=value;},setDesktop:(value:boolean)=>{desktop=value;}};
+  return {dir,reader,backend,host,user,metadata,advance:()=>{at+=5000;},tick:async()=>{at+=5000;return backend.tick();},setPaused:(value:boolean)=>{paused=value;},setDesktop:(value:boolean)=>{desktop=value;}};
 }
 test('cursor and messages commit atomically; overlapping pages deduplicate; restart resumes persisted cursor',async()=>{
-  const {dir,reader,backend,host}=await setup();await backend.tick();
+  const {dir,reader,backend,host,tick,advance}=await setup();await tick();
   expect(backend.store.value.chats[0]!.messages.map(m=>m.id)).toEqual(['1']);
-  reader.events=[row(1),row(2)];reader.cursor='c2';await backend.tick();await backend.tick();
+  reader.events=[row(1),row(2)];reader.cursor='c2';await tick();await tick();
   expect(backend.store.value.chats[0]!.messages.map(m=>m.id)).toEqual(['1','2']);
   const reopened=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')));await reopened.start();await reopened.tick();
   expect(reader.calls.at(-1)?.input.cursor).toBe('c2');
@@ -40,77 +40,78 @@ test('cursor and messages commit atomically; overlapping pages deduplicate; rest
   expect((await stat(join(dir,'data/connection.json'))).mode&0o777).toBe(0o600);
 });
 test('failed read does not advance cursor; recovery catches up without duplicates',async()=>{
-  const {reader,backend}=await setup();await backend.tick();reader.fail=true;
-  await expect(backend.tick()).rejects.toThrow();expect(backend.store.value.chats[0]!.cursor).toBe('c1');
-  reader.fail=false;reader.cursor='c2';reader.events=[row(2)];await backend.tick();
+  const {reader,backend,tick,advance}=await setup();await tick();reader.fail=true;
+  await expect(tick()).rejects.toThrow();expect(backend.store.value.chats[0]!.cursor).toBe('c1');
+  reader.fail=false;reader.cursor='c2';reader.events=[row(2)];await tick();
   expect(backend.store.value.error).toBeNull();expect(backend.store.value.chats[0]!.messages).toHaveLength(2);
 });
 test('no-op polling leaves the private snapshot unchanged',async()=>{
-  const {dir,backend}=await setup();await backend.tick();const before=(await stat(join(dir,'data/connection.json'))).mtimeMs;
-  await backend.tick();expect((await stat(join(dir,'data/connection.json'))).mtimeMs).toBe(before);
+  const {dir,backend,tick,advance}=await setup();await tick();const before=(await stat(join(dir,'data/connection.json'))).mtimeMs;
+  await tick();expect((await stat(join(dir,'data/connection.json'))).mtimeMs).toBe(before);
 });
 test('account change stops before reading selected chats; clear selection permits rebinding',async()=>{
-  const {reader,backend,user}=await setup();await backend.tick();reader.identity='account-2';const count=reader.calls.length;
-  await expect(backend.tick()).rejects.toThrow('账号已变化');expect(reader.calls.slice(count).map(c=>c.tool)).toEqual(['status']);
-  await backend.invoke('select',{chats:[]},user);await backend.invoke('select',{chats:[chat]},user);await backend.tick();
+  const {reader,backend,user,tick,advance}=await setup();await tick();reader.identity='account-2';const count=reader.calls.length;
+  await expect(tick()).rejects.toThrow('账号已变化');expect(reader.calls.slice(count).map(c=>c.tool)).toEqual(['read_events']);
+  await backend.invoke('select',{chats:[]},user);await backend.invoke('select',{chats:[chat]},user);await tick();
   expect(backend.store.value.identity).toBe('account-2');
 });
 test('synchronizer follows note pause, desktop pause and user enabled setting',async()=>{
-  const {backend,user,setPaused,setDesktop}=await setup();const active=backend.synchronizers.messages!.active;
+  const {backend,user,setPaused,setDesktop,tick,advance}=await setup();const active=backend.synchronizers.messages!.active;
   expect(await active()).toBe(true);setPaused(true);expect(await active()).toBe(false);setPaused(false);setDesktop(false);expect(await active()).toBe(false);
   setDesktop(true);await backend.invoke('enable',{enabled:false},user);expect(await active()).toBe(false);
   await backend.invoke('enable',{enabled:true},user);expect(await active()).toBe(true);
 });
 test('invalid message shape fails without publishing an empty replacement or advancing cursor',async()=>{
-  const {backend,reader}=await setup();await backend.tick();reader.cursor='c2';reader.events=[{text:'missing identity'}];
-  await expect(backend.tick()).rejects.toThrow('消息结构变化');expect(backend.store.value.chats[0]!.cursor).toBe('c1');
+  const {backend,reader,tick,advance}=await setup();await tick();reader.cursor='c2';reader.events=[{text:'missing identity'}];
+  await expect(tick()).rejects.toThrow('消息结构变化');expect(backend.store.value.chats[0]!.cursor).toBe('c1');
   expect(backend.store.value.chats[0]!.messages).toHaveLength(1);
 });
 test('private data stays outside note state and generic records; non-owning mutations remain rejected',async()=>{
-  const {backend,metadata,dir,user}=await setup();await backend.tick();
+  const {backend,metadata,dir,user,tick,advance}=await setup();await tick();
   expect(JSON.stringify([...metadata.values()])).not.toContain('合成');
   await expect(backend.invoke('select',{chats:[chat]},{...user,kind:'agent'})).rejects.toThrow('授权');
   expect(JSON.parse(await readFile(join(dir,'data/connection.json'),'utf8')).chats).toHaveLength(1);
   await expect(backend.resources.messages!.load({chatId:chat.id},{scope:{noteId:'other'}} as any)).rejects.toThrow('所属');
 });
-test('bounded catch-up and storage keep latest 200, unload stops source and active synchronization',async()=>{
-  const {reader,backend}=await setup();reader.events=Array.from({length:300},(_,i)=>row(i+2));reader.hasMore=true;await backend.tick();
-  expect(reader.calls.filter(c=>c.tool==='read_events')).toHaveLength(5);expect(backend.store.value.chats[0]!.messages).toHaveLength(200);
+test('catch-up drains every page, keeps latest 200 and unload stops source and active synchronization',async()=>{
+  const {reader,backend,tick}=await setup();let page=0;const call=reader.call.bind(reader);
+  reader.call=async(tool,input,signal)=>tool==='read_events'&&input.talker?{identity:reader.identity,data:{cursor:`local_id:${++page*100}`,events:Array.from({length:100},(_,i)=>({message:row((page-1)*100+i+1)})),query:{has_more:page<7}}}:call(tool,input,signal);
+  await tick();expect(page).toBe(7);expect(backend.store.value.chats[0]!.messages).toHaveLength(200);
   await backend.beginClose();await backend.close();expect(reader.closed).toBe(true);expect(await backend.synchronizers.messages!.active()).toBe(false);
 });
 test('parallel refreshes share ingestion; cancellation leaves the last committed cursor usable',async()=>{
-  const {backend,reader}=await setup();await backend.tick();const original=reader.call.bind(reader);
+  const {backend,reader,tick,advance}=await setup();await tick();const original=reader.call.bind(reader);
   let entered!:()=>void;const ready=new Promise<void>(resolve=>{entered=resolve;});
   reader.call=async(tool,input,signal)=>{
     if(tool!=='read_events')return original(tool,input,signal);
     entered();await new Promise<void>((_resolve,reject)=>{signal!.addEventListener('abort',()=>reject(Error('cancelled')),{once:true});});
     return original(tool,input,signal);
   };
-  const abort=new AbortController();const first=backend.tick(abort.signal);const second=backend.tick(abort.signal);
+  advance();const abort=new AbortController();const first=backend.tick(abort.signal);const second=backend.tick(abort.signal);
   expect(first).toBe(second);await ready;abort.abort();await expect(first).rejects.toThrow('cancelled');
   expect(backend.store.value.chats[0]!.cursor).toBe('c1');expect(backend.store.value.error).toBeNull();
-  reader.call=original;reader.events=[row(2)];reader.cursor='c2';await backend.tick();expect(backend.store.value.chats[0]!.messages).toHaveLength(2);
+  reader.call=original;reader.events=[row(2)];reader.cursor='c2';await tick();expect(backend.store.value.chats[0]!.messages).toHaveLength(2);
 });
 
 test('only incoming text and own filehelper text publish; outgoing private/group text remains locally visible',async()=>{
-  const {backend,reader,host,user}=await setup();const events:any[]=[];
+  const {backend,reader,host,user,tick,advance}=await setup();const events:any[]=[];
   host.app.publishNodeEvent=async(event:any)=>{events.push(event);};
   const group={id:'synthetic-group@chatroom',name:'文件传输助手',type:'group' as const};
   const helper={id:'filehelper',name:'合成改名助手',type:'private' as const};
   await backend.invoke('select',{chats:[{...chat,name:'文件传输助手'},group,helper]},user);
-  await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  await tick();await backend.invoke('autoConfigure',{enabled:true},user);
   const now=Math.ceil(Date.now()/1000);
   reader.events=[{...row(2),create_time:now,is_from_me:false},{...row(3),create_time:now,is_from_me:true},{...row(4),create_time:now,kind:'image',is_from_me:true}];
-  await backend.tick();await backend.tick();
+  await tick();await tick();
   expect(events.map(e=>[e.payload.itemId,e.payload.messageId])).toEqual([[chat.id,'2'],[group.id,'2'],['filehelper','2'],['filehelper','3']]);
   expect(backend.store.value.chats.every(c=>c.messages.some(m=>m.id==='3'&&m.fromMe))).toBe(true);
 });
 
 test('restart discards legacy pending outgoing text but retains retry identity for eligible messages',async()=>{
-  const {backend,reader,host,dir,user}=await setup();await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  const {backend,reader,host,dir,user,tick,advance}=await setup();await tick();await backend.invoke('autoConfigure',{enabled:true},user);
   const seen:any[]=[];let fail=true;host.app.publishNodeEvent=async(event:any)=>{seen.push(event);if(fail)throw Error('publish failed');};
   await backend.store.transaction(value=>{value.chats[0]!.pending=[{id:'old-own',time:1,sender:'合成本人',text:'不触发',kind:'text',fromMe:true},{id:'old-incoming',time:1,sender:'合成发送人',text:'应重试',kind:'text',fromMe:false}];});
-  await expect(backend.tick()).rejects.toThrow('publish failed');
+  await expect(tick()).rejects.toThrow('publish failed');
   expect(backend.store.value.chats[0]!.pending?.map(m=>m.id)).toEqual(['old-incoming']);
   fail=false;const reopened=new WechatBackend(host,reader,new PrivateStore(join(dir,'data')));await reopened.start();await reopened.tick();
   expect(seen.map(e=>e.payload.messageId)).toEqual(['old-incoming','old-incoming']);expect(seen[0].key).toBe(seen[1].key);
@@ -118,17 +119,17 @@ test('restart discards legacy pending outgoing text but retains retry identity f
 });
 
 test('record feedback survives reingestion without publishing an additional event',async()=>{
-  const {backend,reader,host,user}=await setup();const events:any[]=[];host.app.publishNodeEvent=async(event:any)=>{events.push(event);};
-  await backend.tick();await backend.invoke('autoConfigure',{enabled:true},user);
-  reader.events=[{...row(2),create_time:Math.ceil(Date.now()/1000)}];await backend.tick();
+  const {backend,reader,host,user,tick,advance}=await setup();const events:any[]=[];host.app.publishNodeEvent=async(event:any)=>{events.push(event);};
+  await tick();await backend.invoke('autoConfigure',{enabled:true},user);
+  reader.events=[{...row(2),create_time:Math.ceil(Date.now()/1000)}];await tick();
   const result=await backend.invoke('recordHandling',{id:chat.id,messageId:'2',status:'followed',reason:'合成任务已交办',task:{noteId:'execution',objectId:'synthetic-task'}},user);
-  await backend.tick();expect(events).toHaveLength(1);
+  await tick();expect(events).toHaveLength(1);
   if(!('handling' in result))throw Error('Missing handling receipt');
   expect(backend.store.value.chats[0]!.messages.find(m=>m.id==='2')!.handling).toEqual(result.handling);
 });
 
  test('related results use only selected chat task references, deduplicate and read current public results',async()=>{
-  const {backend,host,user}=await setup();await backend.tick();
+  const {backend,host,user,tick,advance}=await setup();await tick();
   await backend.store.transaction(value=>{const first=value.chats[0]!.messages[0]!;first.handling={status:'followed',reason:'合成交办',task:{noteId:'desk',objectId:'bound-task'},recordedAt:1};value.chats[0]!.messages.push({...first,id:'2'});});
   const reads:any[]=[];let reply='合成第一轮回答';
   const ctx:any={scope:{noteId:'note'},read:async(request:any)=>{reads.push(request);return {delegationId:'bound-task',title:'合成任务',status:'completed',archived:false,summary:'合成结论',replySuggestion:reply,revision:reply};}};
@@ -142,7 +143,7 @@ test('record feedback survives reingestion without publishing an additional even
  });
 
 test('one-click initialization verifies local reads and chooses only filehelper without exposing content',async()=>{
-  const {backend,user,reader}=await setup();
+  const {backend,user,reader,tick,advance}=await setup();
   await backend.invoke('select',{chats:[]},user);
   await backend.invoke('enable',{enabled:false},user);
   const result=await backend.invoke('initialize',{}, {...user,kind:'agent',controlNoteId:'note'});
@@ -157,7 +158,7 @@ test('one-click initialization verifies local reads and chooses only filehelper 
   await expect(backend.invoke('initialize',{}, {...user,kind:'agent',noteId:'other',controlNoteId:'other'})).rejects.toThrow('原便笺');
 });
 test('AI context excludes messages from before explicit routing consent',async()=>{
-  const {backend,user}=await setup();await backend.tick();
+  const {backend,user,tick,advance}=await setup();await tick();
   await backend.invoke('autoConfigure',{enabled:true},user);
   const since=backend.store.value.routing!.since;
   await backend.store.transaction(value=>{value.chats[0]!.messages.push({id:'new',time:Math.ceil(since/1000),kind:'text',text:'公开示例需求',fromMe:false,sender:'合成发送人'});});
@@ -171,7 +172,7 @@ test('AI context excludes messages from before explicit routing consent',async()
 
 
 test('authorized selected chats can be found by name without events and their returned ID reads current context',async()=>{
-  const {backend,user,reader}=await setup();
+  const {backend,user,reader,tick,advance}=await setup();
   const read:any=async(request:any)=>request.name==='synchronizer.wechat.messages.status'?{nextRunAt:123,error:null}:undefined;
   const ctx:any={scope:{noteId:'note'},read};
   const before:any=await backend.resources.status!.load({},ctx);
@@ -193,7 +194,7 @@ test('authorized selected chats can be found by name without events and their re
 });
 
 test('connection status separates successful empty selection, paused reads, sync failures and AI automation',async()=>{
-  const {backend,user,setPaused,setDesktop}=await setup();
+  const {backend,user,setPaused,setDesktop,tick,advance}=await setup();
   let error:string|null=null;
   const ctx:any={scope:{noteId:'note'},read:async()=>({nextRunAt:123,error})};
   setPaused(true);expect(await backend.resources.status!.load({},ctx)).toMatchObject({enabled:true,paused:true,automatic:false});
@@ -208,7 +209,7 @@ test('connection status separates successful empty selection, paused reads, sync
 
 
 test('owning Agent controls selection, reading, pause and local feedback without a connection or UI click',async()=>{
-  const {backend,reader,user}=await setup();await backend.tick();
+  const {backend,reader,user,tick,advance}=await setup();await tick();
   const agent={...user,kind:'agent' as const,controlNoteId:'note'};
   const another={id:'selected-group',name:'Synthetic group',type:'group' as const};
   await backend.invoke('select',{chats:[chat,another]},agent);

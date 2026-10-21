@@ -2,7 +2,8 @@ import {resolve} from 'node:path';
 import type {WorkaExtensionHost,Caller,ResourceDefinition,SynchronizerDefinition} from '@realiz3r/worka/host';
 import {isNoteController} from '@realiz3r/worka/host';
 import {PrivateStore,normalize,merge,type Chat,type ChatState,type Message,type Handling} from './store';
-import {READ_ERROR,type Reader} from './source';
+import {READ_ERROR,IdentityError,type Reader} from './source';
+const INTERVAL_MS=5_000;
 
 // Match the built-in account ID, never a user-editable display name.
 export function canTrigger(chatId:string,message:Message){return message.kind==='text'&&(!message.fromMe||chatId==='filehelper');}
@@ -12,9 +13,11 @@ export class WechatBackend {
   readonly synchronizers:Record<string,SynchronizerDefinition>;
   private stopped=false;
   private sync?:Promise<void>;
+  private nextRunAt=0;
+  private since?:number;
   private activity:ReturnType<WorkaExtensionHost['app']['records']>;
   template?:string;
-  constructor(private host:WorkaExtensionHost,private reader:Reader,readonly store=new PrivateStore(resolve(host.dataRoot,'providers/wechat'))) {
+  constructor(private host:WorkaExtensionHost,private reader:Reader,readonly store=new PrivateStore(resolve(host.dataRoot,'providers/wechat')),private now=Date.now) {
     this.activity=host.app.records({owner:'wechat',collection:'activity',storagePrefix:'wechat:activity:'});
     const subscribe=(_input:unknown,invalidate:()=>void)=>store.subscribe(invalidate);
     this.resources={
@@ -77,7 +80,7 @@ export class WechatBackend {
         this.owner(ctx.scope.noteId);this.consent();const row=this.chat(String((input as any).id??''));return {chat:row.chat,messages:this.authorizedMessages(row)};
       }},
     };
-    this.synchronizers={messages:{version:'1',intervalMs:5_000,jitter:false,
+    this.synchronizers={messages:{version:'2',intervalMs:INTERVAL_MS,jitter:false,
       active:async()=>{
         // Host-owned invalidation only. Private contacts and messages never enter generic records.
         await this.activity.read('settings');
@@ -90,45 +93,82 @@ export class WechatBackend {
   private consent(){if(!this.store.value.routing?.since)throw Error('请先授权微信消息进入 AI 连线。');}
   private authorizedMessages(row:ChatState){return row.messages.filter(message=>message.time*1000>=(this.store.value.routing?.since??Infinity));}
   private chat(id:string){const row=this.store.value.chats.find(item=>item.chat.id===id);if(!row)throw Error('请先选择一个正在跟踪的会话。');return row;}
-  private account(identity:string){if(this.store.value.identity&&this.store.value.identity!==identity)throw Error('微信账号已变化，请清除已选会话后重新选择。');}
+  private account(identity:string){if(this.store.value.identity&&this.store.value.identity!==identity)throw new IdentityError('微信账号已变化，请清除已选会话后重新选择。');}
   private async activityChanged(){const {noteId,enabled,chats}=this.store.value;await this.activity.write('settings',{noteId,enabled,hasChats:chats.length>0});}
   async start(){await this.store.open();await this.activityChanged();}
-  private async readChat(row:ChatState,identity:string,signal?:AbortSignal):Promise<ChatState>{
+  private async discover(signal?:AbortSignal){
+    let more=true;
+    while(more){
+      signal?.throwIfAborted();
+      const sync=this.store.value.sync!,scan=sync.scan??{startedAt:this.now()};
+      const since=this.since??sync.since;
+      const input=scan.cursor?{cursor:scan.cursor}:since!==undefined?{since_time:String(Math.floor(since/1000))}:{};
+      const result=await this.reader.call('read_events',{...input,limit:200},signal);
+      this.account(result.identity);
+      const data=result.data;
+      if(typeof data.cursor!=='string'||!Array.isArray(data.events)||typeof data.query?.has_more!=='boolean'||data.query.scan_truncated===true)throw Error('微信会话变化未完整读取，已保留发现位置。');
+      if(data.events.some((event:any)=>typeof event.session?.username!=='string'))throw Error('微信会话变化结构不完整，已保留发现位置。');
+      more=data.query.has_more;
+      if(more&&(!data.events.length||data.cursor===scan.cursor))throw Error('微信会话变化分页未推进，已保留发现位置。');
+      signal?.throwIfAborted();
+      const committed=await this.store.transaction(value=>{
+        if(!value.enabled||!value.sync)return;
+        this.account(result.identity);value.identity??=result.identity;
+        let selected=false;
+        for(const event of data.events){const id=event.session.username;
+          if(value.chats.some(row=>row.chat.id===id)){selected=true;if(!value.sync.queue.includes(id))value.sync.queue.push(id);}}
+        if(more)value.sync.scan={...scan,cursor:data.cursor};
+        else{
+          // Session timestamps have second precision. Revisit the boundary second,
+          // then let each chat's local_id cursor exclude already-read messages.
+          // Empty checks keep their lower bound in memory. Restart may replay
+          // discovery safely, without rewriting the entire private message file.
+          if(selected||value.sync.scan||value.sync.since===undefined)value.sync.since=scan.startedAt-1000;
+          delete value.sync.scan;
+        }
+        return true;
+      });
+      if(!committed)return;
+      if(!more)this.since=scan.startedAt-1000;
+      if(this.stopped||!this.store.value.enabled||!this.store.value.sync)return;
+    }
+  }
+  private async readChat(row:ChatState,identity:string,signal?:AbortSignal){
     signal?.throwIfAborted();
+    await this.publishPending(row.chat.id);
     let next=structuredClone(row);
     if(!next.cursor){
       const result=await this.reader.call('timeline',{talker:row.chat.id,limit:50},signal);
-      if(result.identity!==identity)throw Error('微信账号已变化，请重新选择会话。');
+      if(result.identity!==identity)throw new IdentityError('微信账号已变化，请重新选择会话。');
       if(!Array.isArray(result.data.messages))throw Error(READ_ERROR);
       next.messages=merge(next.messages,result.data.messages.map(normalize));
     }
     const args=next.cursor?{cursor:next.cursor}:{since_local_id:next.messages.length?Math.max(...next.messages.map(message=>Number(message.id))):0};
-    // Bounded catch-up. More pages remain for the next tick; the cursor commits with each page's messages.
-    for(let page=0;page<5;page++){
-      if(this.stopped||!this.store.value.enabled||!this.store.value.chats.some(item=>item.chat.id===row.chat.id))return next;
-      const result=await this.reader.call('read_events',{talker:row.chat.id,...(next.cursor?{cursor:next.cursor}:args),limit:100},signal);
-      if(result.identity!==identity)throw Error('微信账号已变化，请重新选择会话。');
-      const data=result.data;
-      if(typeof data.cursor!=='string'||!Array.isArray(data.events))throw Error(READ_ERROR);
-      const incoming=data.events.filter((event:any)=>event.message).map((event:any)=>normalize(event.message));
-      next={...next,cursor:data.cursor,messages:merge(next.messages,incoming)};
-      signal?.throwIfAborted();
-      await this.store.transaction(value=>{
-        if(value.identity!==identity||!value.enabled) return;
-        const index=value.chats.findIndex(item=>item.chat.id===row.chat.id);
-        if(index>=0){
-          const current=value.chats[index]!;const known=new Set(current.messages.map(message=>message.id));
-          next.messages=merge(current.messages,next.messages);
-          next.pending=value.routing?.enabled?next.messages.filter(message=>!known.has(message.id)&&message.time*1000>=value.routing!.since&&canTrigger(row.chat.id,message)):[];
-          value.chats[index]=next;
-        }
-      });
-      await this.publishPending(row.chat.id);
-      const current=this.store.value.chats.find(item=>item.chat.id===row.chat.id);if(!current)return next;
-      next=structuredClone(current);
-      if(data.query?.has_more!==true)break;
-    }
-    return next;
+    const result=await this.reader.call('read_events',{talker:row.chat.id,...args,limit:100},signal);
+    if(result.identity!==identity)throw new IdentityError('微信账号已变化，请重新选择会话。');
+    const data=result.data;
+    if(typeof data.cursor!=='string'||!Array.isArray(data.events)||typeof data.query?.has_more!=='boolean')throw Error(READ_ERROR);
+    if(data.query.has_more&&(!data.events.length||data.cursor===next.cursor))throw Error('微信消息分页未推进，已保留读取位置。');
+    const incoming=data.events.filter((event:any)=>event.message).map((event:any)=>normalize(event.message));
+    next={...next,cursor:data.cursor,messages:merge(next.messages,incoming)};
+    signal?.throwIfAborted();
+    await this.store.transaction(value=>{
+      if(value.identity!==identity||!value.enabled)return;
+      const index=value.chats.findIndex(item=>item.chat.id===row.chat.id);
+      if(index>=0){
+        const current=value.chats[index]!;const known=new Set(current.messages.map(message=>message.id));
+        next.messages=merge(current.messages,next.messages);
+        next.pending=value.routing?.enabled?next.messages.filter(message=>!known.has(message.id)&&message.time*1000>=value.routing!.since&&canTrigger(row.chat.id,message)):[];
+        value.chats[index]=next;
+      }
+    });
+    await this.publishPending(row.chat.id);
+    await this.store.transaction(value=>{
+      const queue=value.sync?.queue;if(!queue)return;
+      const index=queue.indexOf(row.chat.id);if(index<0)return;
+      queue.splice(index,1);
+      if(data.query.has_more&&value.chats.some(item=>item.chat.id===row.chat.id))queue.push(row.chat.id);
+    });
   }
   private async publishPending(chatId:string){
     while(!this.stopped&&this.store.value.routing?.enabled){
@@ -148,13 +188,29 @@ export class WechatBackend {
     if(this.sync)return this.sync;
     this.sync=(async()=>{
       try{
-        if(this.stopped||!this.store.value.enabled)return;
-        for(const row of this.store.value.chats)await this.publishPending(row.chat.id);
-        const status=await this.reader.call('status',{},signal);this.account(status.identity);
-        if(status.data.status?.live_read_ok!==true)throw Error(READ_ERROR);
-        const identity=status.identity;
-        await this.store.transaction(value=>{value.identity??=identity;});
-        for(const row of this.store.value.chats)await this.readChat(row,identity,signal);
+        const data=this.store.value;
+        if(this.stopped||!data.enabled||!data.noteId||!data.chats.length)return;
+        const note=await this.host.app.core.getNote(data.noteId);
+        if(!note||note.value.archived||note.value.followingPaused||!await this.host.app.core.desktopRunnable(note.value.desktopId))return;
+        signal?.throwIfAborted();
+        const at=this.now();if(at<this.nextRunAt)return;this.nextRunAt=at+INTERVAL_MS;
+        await this.store.transaction(value=>{
+          value.sync??={queue:value.chats.map(row=>row.chat.id)};
+          for(const row of value.chats)if(row.pending?.length&&!value.sync.queue.includes(row.chat.id))value.sync.queue.push(row.chat.id);
+        });
+        await this.discover(signal);
+        const failed=new Set<string>();let failure:unknown;
+        while(!this.stopped&&this.store.value.enabled){
+          signal?.throwIfAborted();
+          const id=this.store.value.sync?.queue.find(id=>!failed.has(id));if(!id)break;
+          const row=this.chat(id);
+          try{await this.readChat(row,this.store.value.identity!,signal);}
+          catch(error){
+            if(signal?.aborted||error instanceof IdentityError)throw error;
+            failed.add(id);failure??=error;
+          }
+        }
+        if(failure)throw failure;
         signal?.throwIfAborted();
         await this.store.transaction(value=>{value.error=null;});
       }catch(error){
@@ -217,9 +273,17 @@ export class WechatBackend {
       await this.store.transaction(value=>{
         if(value.identity&&value.identity!==status.identity&&chats.length)throw Error('微信账号已变化，请先清除已选会话。');
         value.identity=chats.length?status.identity:null;
+        if(value.sync){
+          const old=new Set(value.chats.map(row=>row.chat.id));
+          value.sync.queue=value.sync.queue.filter(id=>chats.some(chat=>chat.id===id));
+          for(const chat of chats)if(!old.has(chat.id)&&!value.sync.queue.includes(chat.id))value.sync.queue.push(chat.id);
+        }
+        if(!chats.length)delete value.sync;
         value.chats=chats.map(chat=>{const old=value.chats.find(row=>row.chat.id===chat.id);return old?{...old,chat}:{chat,messages:[]};});
         value.error=null;
-      });await this.activityChanged();return {selected:chats.length};
+      });
+      if(!chats.length){this.since=undefined;this.nextRunAt=0;}
+      await this.activityChanged();return {selected:chats.length};
     }
     throw Error('未知的微信便笺操作。');
   }

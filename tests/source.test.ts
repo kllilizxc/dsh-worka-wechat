@@ -29,3 +29,12 @@ test('only bounded read tools; OS sandbox covers MCP/CLI; split UTF-8 and orderl
     await client.close();expect(killed).toBe(true);await expect(client.call('status',{})).rejects.toThrow('已停止');
   }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+test('bridge account changes remain distinguishable from a local chat read failure',async()=>{
+ const {IdentityError}=await import('../src/source');const dir=await mkdtemp(join(tmpdir(),'wechat-identity-')),config=join(dir,'config.json');
+ await writeFile(config,JSON.stringify({python:'/test/python',project:'/test/mcp'}));
+ let listen:(chunk:Uint8Array)=>void=()=>{},exit!:()=>void;const done=new Promise<any>(resolve=>{exit=()=>resolve({code:0});});
+ const runtime:any={subprocess:{spawn:async()=>({stdout:{onData:(fn:any)=>{listen=fn;queueMicrotask(()=>listen(Buffer.from('{"ready":true}\n')));return()=>{};}},stdin:{write:(line:string)=>{const req=JSON.parse(line);listen(Buffer.from(JSON.stringify({id:req.id,ok:false,code:'account_changed'})+'\n'));}},wait:()=>done,kill:async()=>{exit();}})}};
+ const client=new LocalMcp(runtime,'/test/bridge.py',config);
+ try{await expect(client.call('read_events',{})).rejects.toBeInstanceOf(IdentityError);}finally{await client.close();await rm(dir,{recursive:true,force:true});}
+});
