@@ -7,7 +7,7 @@ export type Handling={status:'followed'|'skipped';reason:string;task?:{noteId:st
 export type Message={id:string;time:number;sender:string;text:string;kind:string;fromMe:boolean;handling?:Handling};
 export type ChatState={chat:Chat;cursor?:string;messages:Message[];pending?:Message[]};
 export type SyncState={queue:string[];since?:number;scan?:{startedAt:number;cursor?:string}};
-export type Connection={noteId:string|null;enabled:boolean;identity:string|null;chats:ChatState[];error:string|null;routing?:{enabled:boolean;since:number};sync?:SyncState};
+export type Connection={noteId:string|null;initialized?:boolean;enabled:boolean;identity:string|null;chats:ChatState[];error:string|null;routing?:{enabled:boolean;since:number};sync?:SyncState};
 export const empty=():Connection=>({noteId:null,enabled:false,identity:null,chats:[],error:null});
 
 /** One bounded private snapshot: messages and cursor publish in the same atomic rename. */

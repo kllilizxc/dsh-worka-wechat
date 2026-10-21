@@ -1,0 +1,29 @@
+{
+  "mcp": {
+    "url": "https://codeload.github.com/hetiankong/wechat-local-agent-mcp/tar.gz/b7c1de20462e87a80e6c45b86eb17c7d1230d500",
+    "sha256": "2a04a30eec5da1923b80a88567f4a44a91c787eed7c5b8be8866106bca0184b3",
+    "size": 46374
+  },
+  "sqlcipher": {
+    "url": "https://codeload.github.com/Tencent/sqlcipher/tar.gz/5d8825c22feedb421ad6f9ecfc1399460e10d299",
+    "sha256": "de7f07ecf37317f724b5d3c2e9285834cb90388639d1717f2227b410103141ec",
+    "size": 17723135
+  },
+  "wxkey": {
+    "url": "https://proxy.golang.org/github.com/r266-tech/wxkey/@v/v1.4.8.zip",
+    "sha256": "9477ab94245af1594c1fccebf0504863732832e8bf2d1f81105b12bde9fb6083",
+    "version": "v1.4.8",
+    "moduleSum": "h1:a03tPALA18pJ7UwtJj6YtdBeYzYwaUggrq9yyMN3q6s="
+  },
+  "cli": {
+    "url": "https://proxy.golang.org/github.com/r266-tech/wechat-cli/@v/v1.6.21.zip",
+    "sha256": "a05c01ee1737650570ef22e3d099995d349a4cc74e86d846ffd4aaed1d8796b0",
+    "version": "v1.6.21",
+    "moduleSum": "h1:wYFiC9LjA6MTCFDxfDl9bH6LwvMj5T7T9xlagBAdKic="
+  },
+  "python": {
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261001/cpython-3.12.15%2B20261001-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "sha256": "10cab8f6ed6202fdd81637aa6eda4af8d5b7eaa8fc42f9df3c6bea4923de0d93",
+    "version": "3.12.15"
+  }
+}

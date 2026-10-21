@@ -4,6 +4,11 @@ import {note,chatSchema,messageSchema,inboxSchema,handlingSchema,relatedTaskSche
 export {note} from './model';
 export const background=note.background({async start(ctx){await ctx.host.extensions.request('wechat','bind');}});
 export const queries={
+  connection:note.query({description:'本机界面检查微信便笺是否已初始化，不读取消息。',input:z.object({}),output:z.object({initialized:z.boolean()})},async(ctx)=>{
+    const snapshot=await ctx.resources.read({name:'extension.wechat.connection',input:{}});
+    if(snapshot.error||!snapshot.data)throw Error(snapshot.error??'无法检查微信连接');
+    return snapshot.data as {initialized:boolean};
+  }),
   status:note.query({visibility:'public',description:'读取微信接入状态：读取开关、暂停、错误、已选数量和 AI 授权/自动处理状态；不含消息。',input:z.object({}),output:statusSchema},async(ctx,input)=>{
     const snapshot=await ctx.resources.read({name:'extension.wechat.status',input});
     if(snapshot.error||!snapshot.data)throw Error(snapshot.error??'微信接入状态尚未就绪');return snapshot.data as z.infer<typeof statusSchema>;

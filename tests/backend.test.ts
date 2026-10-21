@@ -142,6 +142,22 @@ test('record feedback survives reingestion without publishing an additional even
   expect(reads).toHaveLength(2);
  });
 
+test('an unbound connection reports initialization without reading data or granting a foreign note access',async()=>{
+  const {backend,reader}=await setup();
+  await backend.store.transaction(value=>{value.noteId=null;});
+  const before=reader.calls.length;
+  expect(await backend.resources.connection!.load({}, {scope:{noteId:'note'}} as any)).toEqual({initialized:false});
+  expect(reader.calls).toHaveLength(before);
+  await backend.store.transaction(value=>{value.noteId='note';});
+  expect(await backend.resources.connection!.load({}, {scope:{noteId:'note'}} as any)).toEqual({initialized:true});
+  await expect(backend.resources.connection!.load({}, {scope:{noteId:'foreign'}} as any)).rejects.toThrow('所属');
+  await backend.store.transaction(value=>{value.initialized=undefined;value.identity=null;value.chats=[];});
+  await backend.invoke('bind',{}, {kind:'user',noteId:'note'});
+  expect(await backend.resources.connection!.load({}, {scope:{noteId:'note'}} as any)).toEqual({initialized:false});
+  await backend.invoke('select',{chats:[]}, {kind:'user',noteId:'note'});
+  expect(await backend.resources.connection!.load({}, {scope:{noteId:'note'}} as any)).toEqual({initialized:true});
+});
+
 test('one-click initialization verifies local reads and chooses only filehelper without exposing content',async()=>{
   const {backend,user,reader,tick,advance}=await setup();
   await backend.invoke('select',{chats:[]},user);

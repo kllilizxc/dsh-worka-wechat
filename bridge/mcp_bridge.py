@@ -39,10 +39,10 @@ def read_scope(tool, args, data):
     }
 
 
-def identity():
+def identity(config):
     # Identity separates cursors across accounts without returning an account ID or key.
-    config = json.loads((Path.home() / '.config/wxcli/config.json').read_text())
-    return hashlib.sha256(json.dumps([config['wxid'], config['db_root']]).encode()).hexdigest()
+    account = json.loads(Path(config.get('key_config', Path.home() / '.config/wxcli/config.json')).read_text())
+    return hashlib.sha256(json.dumps([account['wxid'], account['db_root']]).encode()).hexdigest()
 
 
 def emit(value):
@@ -63,7 +63,9 @@ async def main():
     })
     for flag in ['MEDIA', 'DERIVED_WRITES', 'OCR', 'FILE_TEXT', 'VOICE', 'NETWORK']:
         env['WECHAT_MCP_ENABLE_' + flag] = '0'
-    params = StdioServerParameters(command=config['python'], args=['-m', 'wechat_cli_mcp.server'],
+    if config.get('key_config'):
+        env['WECHAT_CLI_CONFIG'] = config['key_config']
+    params = StdioServerParameters(command=config['python'], args=['-B', '-m', 'wechat_cli_mcp.server'],
                                    cwd=config['project'], env=env)
     with open(os.devnull, 'w') as errlog:
         async with stdio_client(params, errlog=errlog) as (reader, writer):
@@ -80,9 +82,9 @@ async def main():
                         emit({'id': rid, 'ok': False, 'code': 'tool_not_allowed'})
                         continue
                     try:
-                        account = identity()
+                        account = identity(config)
                         result = payload(await asyncio.wait_for(session.call_tool(req['tool'], req.get('input', {})), 30))
-                        if identity() != account:
+                        if identity(config) != account:
                             emit({'id': rid, 'ok': False, 'code': 'account_changed'})
                         elif result.get('ok') is True:
                             emit({'id': rid, 'ok': True, 'identity': account, 'data': read_scope(req['tool'], req.get('input', {}), result.get('data', {}))})

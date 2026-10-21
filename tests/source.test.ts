@@ -5,6 +5,22 @@ import {tmpdir} from 'node:os';
 import {LocalMcp} from '../src/source';
 import {providerRuntime} from '../src/subprocess';
 import {PassThrough} from 'node:stream';
+test('a missing local runtime gives an actionable setup error without starting a process',async()=>{
+  let spawned=false;
+  const client=new LocalMcp({subprocess:{spawn:async()=>{spawned=true;throw Error('unexpected');}}} as any,'/unused/bridge',join(tmpdir(),crypto.randomUUID(),'runtime.json'));
+  await expect(client.call('status',{})).rejects.toThrow('尚未准备本机微信读取组件');
+  await expect(client.call('status',{})).rejects.toMatchObject({code:'operation-rejected'});
+  expect(spawned).toBe(false);
+  await client.close();
+});
+test('missing native initialization is distinguished without inferring a denied system permission',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'wechat-unconfigured-'));
+  const config=join(dir,'runtime.json');await writeFile(config,JSON.stringify({python:'/unused/python',project:dir,key_config:join(dir,'native-authorization.json')}));
+  let spawned=false;
+  const client=new LocalMcp({subprocess:{spawn:async()=>{spawned=true;throw Error('unexpected');}}} as any,'/unused/bridge',config);
+  try {await expect(client.call('status',{})).rejects.toThrow('本机微信读取初始化尚未完成');expect(spawned).toBe(false);}
+  finally {await client.close();await rm(dir,{recursive:true,force:true});}
+});
 test('provider uses one DSH-owned process range without a second host sandbox',async()=>{
   const stdin=new PassThrough(),stdout=new PassThrough();let spec:any,terminated=false,drained=false;
   const runtime=providerRuntime({spawn:(input:any)=>{

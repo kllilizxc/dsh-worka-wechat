@@ -44,14 +44,16 @@ function View(){
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
   useEffect(()=>{if(!focus||mode!=='expanded')return;setManaging(focus==='sessions');if(focus!=='sessions'){setSelected(focus);setKeyword('');setOffset(0);}},[focus,requestId,mode]);
-  const inbox=useQuery('inbox',{});
-  const routing=useQuery('routing',{});
+  const connection=useQuery('connection',{});
+  const initialized=connection.data?.initialized===true;
+  const inbox=useQuery('inbox',{},{enabled:initialized});
+  const routing=useQuery('routing',{},{enabled:initialized});
   const data=inbox.data;
   const chats=latestFirst(data?.chats??[]);
   const chat=chats.find(row=>row.id===selected)??(selected===focus?undefined:chats[0]);
   const messages=useQuery('messages',{chatId:chat?.id??''},{enabled:mode==='expanded'&&!managing&&!!chat});
   const related=useQuery('related',{id:chat?.id??''},{enabled:mode==='expanded'&&!managing&&!!chat});
-  const sessions=useQuery('sessions',{keyword,offset},{enabled:mode==='expanded'&&managing});
+  const sessions=useQuery('sessions',{keyword,offset},{enabled:initialized&&mode==='expanded'&&managing});
   useEffect(()=>{
     if(mode==='expanded'&&!managing&&!selected&&layout.width>600&&chats[0])setSelected(chats[0].id);
   },[mode,managing,selected,layout.width,chats[0]?.id]);
@@ -82,13 +84,20 @@ function View(){
   const save=()=>run(async()=>{await actions.selectChats({chats:chosen});if(chosen.length)await actions.setEnabled({enabled:true});setPending(null);setManaging(false);});
   const identity=<span className="wechat-identity"><NoteIcon icon={metadata.icon} size={20}/><strong>{metadata.name}</strong></span>;
 
+  if(!initialized)return <section className={'wechat wechat-setup '+(mode==='compact'?'compact':'expanded')}>
+    <header>{identity}<span className="wechat-status">{connection.loading?'检查连接中':'等待连接'}</span></header>
+    <NoteGuidance title={connection.error?'无法检查微信连接':'连接本机微信'}
+      description={error||connection.error?.message||'登录这台 Mac 的微信后完成初始化，已有会话和消息会保留。'}
+      action={{label:busy?'正在初始化…':'初始化微信',onPress:()=>{if(!busy)void run(async()=>{await actions.initialize({});await connection.refresh();await inbox.refresh();await routing.refresh();});}}}
+      secondary={{label:'查看设置指引',onPress:()=>host.openSetup()}}/>
+  </section>;
+
   if(mode==='compact')return <section className="wechat compact">
     <header>{identity}<span className={'wechat-status '+(failure?'error':'')}>{failure?'读取受阻':status}</span></header>
-    {!data&&!inbox.error?<p className="compact-empty">正在连接本机微信…</p>:!chats.length?<div className="compact-empty"><strong>选择会话</strong><p>自动读取所选会话的新消息。</p><Button size="sm" variant="secondary" onPress={()=>host.openNote(metadata.id,'sessions')}>选择会话</Button></div>:<>
+    {!data&&!inbox.error?<p className="compact-empty">正在连接本机微信…</p>:!data&&inbox.error?<NoteGuidance title="微信连接需要处理" description={failure} action={{label:'检查连接',onPress:()=>host.openSetup()}}/>:!chats.length?<div className="compact-empty"><strong>选择会话</strong><p>自动读取所选会话的新消息。</p><Button size="sm" variant="secondary" onPress={()=>host.openNote(metadata.id,'sessions')}>选择会话</Button></div>:<>
       <div className="compact-chats">{chats.slice(0,3).map(row=><div key={row.id} className="compact-chat"><strong>{row.unread&&<span className="unread-dot" role="img" aria-label="本便笺未读"/>}{row.name}</strong><span>{text(row.latest)}</span></div>)}</div>
       <footer><span>{chats.length} 个会话 · 只读</span>{failure?<Button size="sm" variant="ghost" onPress={()=>host.openNote(metadata.id)}>查看原因</Button>:<span>展开查看消息</span>}</footer>
     </>}
-    {inbox.error&&!data&&<Button size="sm" variant="secondary" onPress={()=>host.openSetup()}>检查连接</Button>}
   </section>;
 
   return <section className="wechat expanded">

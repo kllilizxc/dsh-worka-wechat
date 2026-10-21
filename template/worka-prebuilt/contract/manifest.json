@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "codeVersion": "initialization-fix",
+  "status": "ready",
+  "files": [
+    "SKILL.md",
+    "references/api.d.ts",
+    "references/types/actions.d.ts",
+    "references/types/model.d.ts"
+  ],
+  "diagnostics": [],
+  "skill": {
+    "name": "worka-wechat",
+    "description": "在本机查看微信消息，经用户明确授权后将已选会话的新消息交给连线协调。"
+  }
+}
