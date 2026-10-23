@@ -1,0 +1,1 @@
+import{a as i}from"./entry-qnhs6y4m.js";import"./entry-4whegyqm.js";import{R as e}from"./entry-r8pd0b45.js";var o=i({prerequisites:{configurationInView:!0},compact:()=>import("./view-body-ztjppxvs.js"),expanded:()=>import("./view-body-ztjppxvs.js")});export{o as default};

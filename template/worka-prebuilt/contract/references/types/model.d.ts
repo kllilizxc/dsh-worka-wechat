@@ -17,6 +17,13 @@ export declare const handlingSchema: z.ZodObject<{
         noteId: z.ZodString;
         objectId: z.ZodString;
     }, z.core.$strip>>;
+    taskTitle: z.ZodOptional<z.ZodString>;
+    taskStatus: z.ZodOptional<z.ZodString>;
+    taskArchived: z.ZodOptional<z.ZodBoolean>;
+    taskSummary: z.ZodOptional<z.ZodString>;
+    taskRevision: z.ZodOptional<z.ZodString>;
+    sessionId: z.ZodOptional<z.ZodString>;
+    replySuggestion: z.ZodOptional<z.ZodString>;
     recordedAt: z.ZodNumber;
 }, z.core.$strip>;
 export declare const messageSchema: z.ZodObject<{
@@ -36,6 +43,13 @@ export declare const messageSchema: z.ZodObject<{
             noteId: z.ZodString;
             objectId: z.ZodString;
         }, z.core.$strip>>;
+        taskTitle: z.ZodOptional<z.ZodString>;
+        taskStatus: z.ZodOptional<z.ZodString>;
+        taskArchived: z.ZodOptional<z.ZodBoolean>;
+        taskSummary: z.ZodOptional<z.ZodString>;
+        taskRevision: z.ZodOptional<z.ZodString>;
+        sessionId: z.ZodOptional<z.ZodString>;
+        replySuggestion: z.ZodOptional<z.ZodString>;
         recordedAt: z.ZodNumber;
     }, z.core.$strip>>;
 }, z.core.$strip>;
@@ -69,9 +83,17 @@ export declare const inboxSchema: z.ZodObject<{
                     noteId: z.ZodString;
                     objectId: z.ZodString;
                 }, z.core.$strip>>;
+                taskTitle: z.ZodOptional<z.ZodString>;
+                taskStatus: z.ZodOptional<z.ZodString>;
+                taskArchived: z.ZodOptional<z.ZodBoolean>;
+                taskSummary: z.ZodOptional<z.ZodString>;
+                taskRevision: z.ZodOptional<z.ZodString>;
+                sessionId: z.ZodOptional<z.ZodString>;
+                replySuggestion: z.ZodOptional<z.ZodString>;
                 recordedAt: z.ZodNumber;
             }, z.core.$strip>>;
         }, z.core.$strip>>;
+        unread: z.ZodBoolean;
     }, z.core.$strip>>;
 }, z.core.$strip>;
 export declare const statusSchema: z.ZodObject<{
@@ -87,7 +109,34 @@ export declare const statusSchema: z.ZodObject<{
 export type Chat = z.infer<typeof chatSchema>;
 export type Message = z.infer<typeof messageSchema>;
 export type Inbox = z.infer<typeof inboxSchema>;
-export declare const note: import("@dsh-workbench/runtime").NoteModel<undefined, undefined, {}>;
+export declare const note: import("@dsh-workbench/runtime").NoteModel<{
+    readonly handling: {
+        schema: z.ZodObject<{
+            status: z.ZodEnum<{
+                followed: "followed";
+                skipped: "skipped";
+            }>;
+            reason: z.ZodString;
+            task: z.ZodOptional<z.ZodObject<{
+                noteId: z.ZodString;
+                objectId: z.ZodString;
+            }, z.core.$strip>>;
+            taskTitle: z.ZodOptional<z.ZodString>;
+            taskStatus: z.ZodOptional<z.ZodString>;
+            taskArchived: z.ZodOptional<z.ZodBoolean>;
+            taskSummary: z.ZodOptional<z.ZodString>;
+            taskRevision: z.ZodOptional<z.ZodString>;
+            sessionId: z.ZodOptional<z.ZodString>;
+            replySuggestion: z.ZodOptional<z.ZodString>;
+            recordedAt: z.ZodNumber;
+        }, z.core.$strip>;
+    };
+    readonly reads: {
+        schema: z.ZodObject<{
+            through: z.ZodNumber;
+        }, z.core.$strip>;
+    };
+}, undefined>;
 export declare const relatedTaskSchema: z.ZodObject<{
     noteId: z.ZodString;
     delegationId: z.ZodString;

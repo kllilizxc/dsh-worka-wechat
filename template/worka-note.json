@@ -1,5 +1,25 @@
 {
-  "schemaVersion": 1,
+  "providers": {
+    "@realiz3r/worka-provider-wechat": {
+      "range": "^0.1.6",
+      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/2e87f9a9811672444b91a622930de5fd2077d1af/releases/wechat/0.1.6/any"
+    }
+  },
+  "prerequisites": [
+    {
+      "name": "extension.worka-wechat.status"
+    }
+  ],
+  "onboarding": {
+    "title": "连接本机微信",
+    "description": "点击一键初始化，在这台 Mac 上完成准备与真实读取核验。",
+    "steps": [
+      "点击一键初始化，自动准备读取组件并验证文件传输助手。",
+      "需要本机授权或扫码时，按系统提示完成。",
+      "连接后选择要读取的会话；AI 自动处理单独开启。"
+    ]
+  },
+  "schemaVersion": 2,
   "name": "微信",
   "scenarios": "在本机查看已选私聊和群聊的新文字消息。",
   "icon": {
@@ -12,40 +32,49 @@
     "README.md",
     "SKILL.md",
     "actions.ts",
+    "assets.d.ts",
+    "chat-order.ts",
+    "icon.svg",
     "model.ts",
     "package.json",
+    "published-query.ts",
+    "record-links.tsx",
     "style.css",
     "task.tsx",
+    "tsconfig.json",
+    "view-body.tsx",
     "view.tsx",
     "worka-source.json",
-    "worka-prebuilt/view-zvy5zjqt.js",
+    "worka-prebuilt/view-runtime-zkj36tz4.js",
     "worka-prebuilt/contract/references/types/model.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
+    "worka-prebuilt/contract/references/types/chat-order.d.ts",
     "worka-prebuilt/contract/references/api.d.ts",
     "worka-prebuilt/contract/SKILL.md",
     "worka-prebuilt/contract/manifest.json",
+    "worka-prebuilt/view-runtime-hw5vhh0a.js",
     "worka-prebuilt/zod-config.mjs",
     "worka-prebuilt/index.html",
+    "worka-prebuilt/entry-4whegyqm.js",
     "worka-prebuilt/entry-bundle.js",
     "worka-prebuilt/view-runtime.mjs",
-    "worka-prebuilt/view-runtime-t52h3my5.js",
+    "worka-prebuilt/entry-r8pd0b45.js",
     "worka-prebuilt/entry-bundle.tailwind.css",
-    "worka-prebuilt/entry-mwjbqgd9.js",
+    "worka-prebuilt/view-body-vcfqd6ct.js",
+    "worka-prebuilt/entry-y5xbns81.js",
+    "worka-prebuilt/entry-hvbbq6wz.js",
+    "worka-prebuilt/entry-yyasanyt.js",
+    "worka-prebuilt/view-body-4t0bant4.js",
+    "worka-prebuilt/view-4wb694rm.js",
+    "worka-prebuilt/view-runtime-s904zyv3.js",
+    "worka-prebuilt/view-body-ztjppxvs.js",
     "worka-prebuilt/actions.mjs",
     "worka-prebuilt/entry-bundle.css",
-    "worka-prebuilt/manifest.json",
-    "chat-order.ts",
-    "icon.svg",
-    "record-links.tsx",
-    "assets.d.ts"
-  ],
-  "onboarding": {
-    "title": "接入本机微信",
-    "description": "由 Agent 准备本机微信后台、读取组件和配置，复用已有登录；一个宿主使用一张微信便笺。",
-    "steps": [
-      "点击“一键 AI 初始化”，Agent 完成环境准备并验证实际读取；没有已选会话时只接入文件传输助手。",
-      "已有会话选择会保留，之后可在便笺内调整。",
-      "初始化只开启本机读取；将新消息交给执行台需明确开启 AI 自动处理。"
-    ]
-  }
+    "worka-prebuilt/entry-8dz0hvgj.js",
+    "worka-prebuilt/view-fh47mmsr.js",
+    "worka-prebuilt/entry-eqndaren.js",
+    "worka-prebuilt/entry-qnhs6y4m.js",
+    "worka-prebuilt/view-dd05sxca.js",
+    "worka-prebuilt/manifest.json"
+  ]
 }
