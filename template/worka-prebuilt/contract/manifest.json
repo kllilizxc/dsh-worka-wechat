@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "codeVersion": "sdk3-upstream-merge",
+  "codeVersion": "272e6cfe2cff3e1be8b3600113f1abce7a9cfa06bac3fd4569c67812a8add6d7",
   "status": "ready",
   "files": [
     "SKILL.md",
