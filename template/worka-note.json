@@ -1,8 +1,8 @@
 {
   "providers": {
     "@realiz3r/worka-provider-wechat": {
-      "range": "^0.1.6",
-      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/2e87f9a9811672444b91a622930de5fd2077d1af/releases/wechat/0.1.6/any"
+      "range": "^0.1.8",
+      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/5c567cbfc40894048d57a05aba06a2159825d38c/releases/wechat/0.1.8/any"
     }
   },
   "prerequisites": [
@@ -47,6 +47,7 @@
     "view-body.tsx",
     "view.tsx",
     "worka-source.json",
+    "worka-prebuilt/view-runtime-2qk05cyv.js",
     "worka-prebuilt/contract/references/types/model.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
     "worka-prebuilt/contract/references/types/chat-order.d.ts",
@@ -56,16 +57,15 @@
     "worka-prebuilt/zod-config.mjs",
     "worka-prebuilt/index.html",
     "worka-prebuilt/entry-bundle.js",
+    "worka-prebuilt/routes-3mhva7sw.js",
     "worka-prebuilt/view-runtime.mjs",
-    "worka-prebuilt/entry-3xr53bxw.js",
+    "worka-prebuilt/entry-et15myh8.js",
     "worka-prebuilt/entry-bundle.tailwind.css",
-    "worka-prebuilt/entry-4535dq81.js",
+    "worka-prebuilt/entry-efvarq1r.js",
+    "worka-prebuilt/view-bsg23aaw.js",
+    "worka-prebuilt/entry-8b6wgr8c.js",
     "worka-prebuilt/actions.mjs",
     "worka-prebuilt/entry-bundle.css",
-    "worka-prebuilt/routes-fy1yk5dq.js",
-    "worka-prebuilt/entry-dpphpwnf.js",
-    "worka-prebuilt/view-runtime-f8zr6712.js",
-    "worka-prebuilt/view-bwc59ksh.js",
     "worka-prebuilt/manifest.json"
   ]
 }
