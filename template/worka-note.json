@@ -3,7 +3,7 @@
   "providers": {
     "@realiz3r/worka-provider-wechat": {
       "range": "^0.1.9",
-      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/6f4017bd9227d7cd7d642f89b75994bcf852d951/releases/wechat/0.1.9/any"
+      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/d70fb24a6b530d760c29e24efdb8087249cde1c7/releases/wechat/0.1.9/any"
     }
   },
   "prerequisites": [
