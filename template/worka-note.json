@@ -1,8 +1,9 @@
 {
+  "version": "0.1.2",
   "providers": {
     "@realiz3r/worka-provider-wechat": {
-      "range": "^0.1.8",
-      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/5c567cbfc40894048d57a05aba06a2159825d38c/releases/wechat/0.1.8/any"
+      "range": "^0.1.9",
+      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/d70fb24a6b530d760c29e24efdb8087249cde1c7/releases/wechat/0.1.9/any"
     }
   },
   "prerequisites": [
@@ -43,29 +44,39 @@
     "routes.tsx",
     "style.css",
     "task.tsx",
+    "third-party-note/@heroui--styles@3.2.4/LICENSE",
+    "third-party-note/WORKA-LICENSE",
+    "third-party-note/tailwindcss@4.3.3/LICENSE",
+    "third-party-note/tw-animate-css@1.4.0/LICENSE",
+    "third-party-note/zod@4.6.1/LICENSE",
     "tsconfig.json",
     "view-body.tsx",
     "view.tsx",
     "worka-source.json",
-    "worka-prebuilt/view-runtime-2qk05cyv.js",
     "worka-prebuilt/contract/references/types/model.d.ts",
+    "worka-prebuilt/contract/references/types/view-body.d.ts",
+    "worka-prebuilt/contract/references/types/route-search.d.ts",
+    "worka-prebuilt/contract/references/types/task.d.ts",
+    "worka-prebuilt/contract/references/types/view.d.ts",
+    "worka-prebuilt/contract/references/types/published-query.d.ts",
+    "worka-prebuilt/contract/references/types/record-links.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
     "worka-prebuilt/contract/references/types/chat-order.d.ts",
+    "worka-prebuilt/contract/references/types/routes.d.ts",
     "worka-prebuilt/contract/references/api.d.ts",
     "worka-prebuilt/contract/SKILL.md",
     "worka-prebuilt/contract/manifest.json",
     "worka-prebuilt/zod-config.mjs",
     "worka-prebuilt/index.html",
     "worka-prebuilt/entry-bundle.js",
-    "worka-prebuilt/routes-3mhva7sw.js",
+    "worka-prebuilt/routes-71f9w0z7.js",
+    "worka-prebuilt/view-runtime-57ccjbv6.js",
     "worka-prebuilt/view-runtime.mjs",
-    "worka-prebuilt/entry-et15myh8.js",
+    "worka-prebuilt/entry-ybyz4kqz.js",
     "worka-prebuilt/entry-bundle.tailwind.css",
-    "worka-prebuilt/entry-efvarq1r.js",
-    "worka-prebuilt/view-bsg23aaw.js",
-    "worka-prebuilt/entry-8b6wgr8c.js",
     "worka-prebuilt/actions.mjs",
     "worka-prebuilt/entry-bundle.css",
+    "worka-prebuilt/view-jfjnx387.js",
     "worka-prebuilt/manifest.json"
   ]
 }

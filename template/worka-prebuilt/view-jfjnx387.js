@@ -1,0 +1,1 @@
+import{e}from"./entry-ybyz4kqz.js";import{defineNoteView as i}from"@dsh-workbench/react";var o=i({prerequisites:{configurationInView:!0},compact:()=>(e("71f9w0z7"),import("./routes-71f9w0z7.js")),expanded:()=>(e("71f9w0z7"),import("./routes-71f9w0z7.js"))});export{o as default};
