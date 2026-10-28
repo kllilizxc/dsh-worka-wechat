@@ -44,8 +44,9 @@ __export(exports_actions, {
 var unreadSince = (messages, readThrough) => messages.at(-1)?.fromMe !== true && messages.some((message) => !message.fromMe && Number(message.id) > readThrough);
 var advanceRead = (current, messageId) => Math.max(current ?? 0, Number(messageId));
 
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/bridge.ts
-var DEFAULT_REQUEST_TIMEOUT_MS = 5 * 60000;
+// .sdk/runtime/dist/chunk-34ttf528.mjs
+var I = /^note-file:[a-f0-9]{64}$/;
+
 // ../../worka-market-compat-plan-20261028/node_modules/.bun/zod@4.6.1/node_modules/zod/v4/core/util.js
 function getEnumValues(entries) {
   const numericValues = Object.values(entries).filter((v) => typeof v === "number");
@@ -6145,705 +6146,481 @@ function json(params) {
   });
   return jsonSchema;
 }
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/collections.ts
-var pageInput = /* @__PURE__ */ (() => strictObject({ cursor: string2().min(1).max(32768).optional() }))();
-var identifier = /^[A-Za-z][A-Za-z\d_-]*$/;
-var idSchema = /* @__PURE__ */ (() => string2().min(1).max(512))();
-function pageSchema(record) {
-  return strictObject({ items: array(record), revision: string2().min(1), next: string2().min(1).optional() });
+// .sdk/runtime/dist/chunk-fp52axzg.mjs
+var S = (() => strictObject({ cursor: string2().min(1).max(32768).optional() }))();
+var De = /^[A-Za-z][A-Za-z\d_-]*$/;
+var fe = (() => string2().min(1).max(512))();
+function Ce(n) {
+  return strictObject({ items: array(n), revision: string2().min(1), next: string2().min(1).optional() });
 }
-function collectionSchemas(declarations = {}) {
-  if (Object.keys(declarations).length > 32)
-    throw new Error("A note may declare at most 32 collections");
-  return Object.entries(declarations).map(([name, definition]) => {
-    if (!identifier.test(name) || !definition || typeof definition !== "object" || Array.isArray(definition) || Object.keys(definition).some((key) => !["schema", "indexes"].includes(key)) || !(definition.schema instanceof ZodObject))
-      throw new Error(`Invalid native collection declaration: ${name}`);
-    if (Object.hasOwn(definition.schema.shape, "id"))
-      throw new Error(`Collection ${name}: id is a system field`);
-    const indexes = definition.indexes?.map((fields) => [...fields]);
-    if (indexes && (indexes.length > 16 || indexes.some((fields) => !fields.length || fields.length > 8 || new Set(fields).size !== fields.length || fields.some((field) => !Object.hasOwn(definition.schema.shape, field)))))
-      throw new Error(`Invalid indexes for collection ${name}`);
-    const recordSchema = definition.schema.safeExtend({ id: idSchema });
-    const model = Object.freeze({ recordSchema, pageSchema: (fields) => {
-      if (fields === undefined)
-        return pageSchema(recordSchema);
-      if (!Array.isArray(fields) || new Set(fields).size !== fields.length || fields.some((field) => !Object.hasOwn(definition.schema.shape, field)))
-        throw new Error(`Invalid projection fields for collection ${name}`);
-      return pageSchema(strictObject({ ...Object.fromEntries(fields.map((field) => [field, definition.schema.shape[field]])), id: idSchema }));
-    } });
-    const contract = {
-      schema: toJSONSchema(definition.schema, { io: "output", unrepresentable: "throw" }),
-      ...indexes?.length ? { indexes } : {}
-    };
-    return { name, definition: Object.freeze({ schema: definition.schema, ...indexes ? { indexes: Object.freeze(indexes.map((fields) => Object.freeze(fields))) } : {} }), model, contract };
+function x(n = {}) {
+  if (Object.keys(n).length > 32)
+    throw Error("A note may declare at most 32 collections");
+  return Object.entries(n).map(([t, r]) => {
+    if (!De.test(t) || !r || typeof r !== "object" || Array.isArray(r) || Object.keys(r).some((g) => !["schema", "indexes"].includes(g)) || !(r.schema instanceof ZodObject))
+      throw Error(`Invalid native collection declaration: ${t}`);
+    if (Object.hasOwn(r.schema.shape, "id"))
+      throw Error(`Collection ${t}: id is a system field`);
+    let l = r.indexes?.map((g) => [...g]);
+    if (l && (l.length > 16 || l.some((g) => !g.length || g.length > 8 || new Set(g).size !== g.length || g.some((y) => !Object.hasOwn(r.schema.shape, y)))))
+      throw Error(`Invalid indexes for collection ${t}`);
+    let p = r.schema.safeExtend({ id: fe }), a = Object.freeze({ recordSchema: p, pageSchema: (g) => {
+      if (g === undefined)
+        return Ce(p);
+      if (!Array.isArray(g) || new Set(g).size !== g.length || g.some((y) => !Object.hasOwn(r.schema.shape, y)))
+        throw Error(`Invalid projection fields for collection ${t}`);
+      return Ce(strictObject({ ...Object.fromEntries(g.map((y) => [y, r.schema.shape[y]])), id: fe }));
+    } }), m = { schema: toJSONSchema(r.schema, { io: "output", unrepresentable: "throw" }), ...l?.length ? { indexes: l } : {} };
+    return { name: t, definition: Object.freeze({ schema: r.schema, ...l ? { indexes: Object.freeze(l.map((g) => Object.freeze(g))) } : {} }), model: a, contract: m };
   });
 }
-function validatePageOptions(declaration, options = {}) {
-  const fields = declaration.schema.shape;
-  if (Object.keys(options).some((key) => !["where", "orderBy", "select", "cursor"].includes(key)))
-    throw new Error("Unknown page option");
-  pageInput.parse({ cursor: options.cursor });
-  for (const [field, value] of Object.entries(options.where ?? {})) {
-    if (!Object.hasOwn(fields, field) && field !== "id")
-      throw new Error(`Unknown filter field: ${field}`);
-    if (value !== null && !["string", "number", "boolean"].includes(typeof value) || typeof value === "number" && !Number.isFinite(value))
-      throw new Error("Page filters support finite scalar equality only");
+function Z(n, t = {}) {
+  let r = n.schema.shape;
+  if (Object.keys(t).some((p) => !["where", "orderBy", "select", "cursor"].includes(p)))
+    throw Error("Unknown page option");
+  S.parse({ cursor: t.cursor });
+  for (let [p, a] of Object.entries(t.where ?? {})) {
+    if (!Object.hasOwn(r, p) && p !== "id")
+      throw Error(`Unknown filter field: ${p}`);
+    if (a !== null && !["string", "number", "boolean"].includes(typeof a) || typeof a === "number" && !Number.isFinite(a))
+      throw Error("Page filters support finite scalar equality only");
   }
-  const ordering = Object.entries(options.orderBy ?? {});
-  if (ordering.length > 1 || ordering.some(([field, direction]) => !Object.hasOwn(fields, field) || !["asc", "desc"].includes(direction)))
-    throw new Error("orderBy accepts one declared business field");
-  if (options.select && (!Array.isArray(options.select) || new Set(options.select).size !== options.select.length || options.select.some((field) => !Object.hasOwn(fields, field))))
-    throw new Error("select accepts declared top-level business fields");
-  return options;
+  let l = Object.entries(t.orderBy ?? {});
+  if (l.length > 1 || l.some(([p, a]) => !Object.hasOwn(r, p) || !["asc", "desc"].includes(a)))
+    throw Error("orderBy accepts one declared business field");
+  if (t.select && (!Array.isArray(t.select) || new Set(t.select).size !== t.select.length || t.select.some((p) => !Object.hasOwn(r, p))))
+    throw Error("select accepts declared top-level business fields");
+  return t;
 }
-
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/json-value.ts
-function assertJson(value) {
-  const seen = new Set;
-  const invalid = () => {
-    throw new Error("Note data must be finite, plain JSON");
-  };
-  const visit = (part) => {
-    if (part === null || typeof part === "string" || typeof part === "boolean" || typeof part === "number" && Number.isFinite(part))
+function e(n) {
+  let t = new Set, r = () => {
+    throw Error("Note data must be finite, plain JSON");
+  }, l = (p) => {
+    if (p === null || typeof p === "string" || typeof p === "boolean" || typeof p === "number" && Number.isFinite(p))
       return;
-    if (!part || typeof part !== "object")
-      return invalid();
-    const array = Array.isArray(part), prototype = Object.getPrototypeOf(part);
-    if (prototype !== (array ? Array.prototype : Object.prototype) && prototype !== null)
-      return invalid();
-    if (Object.getOwnPropertySymbols(part).length)
-      return invalid();
-    if (seen.has(part))
-      throw new Error("Note data cannot contain cycles");
-    const properties = Object.getOwnPropertyDescriptors(part);
-    const toJSON = Object.hasOwn(properties, "toJSON") ? properties.toJSON : prototype && Object.getOwnPropertyDescriptor(prototype, "toJSON");
-    if (toJSON && (!Object.hasOwn(toJSON, "value") || typeof toJSON.value === "function"))
-      return invalid();
-    seen.add(part);
-    if (array) {
-      for (let index = 0;index < part.length; index++) {
-        const key = String(index);
-        const property = Object.hasOwn(properties, key) ? properties[key] : undefined;
-        if (!property || !Object.hasOwn(property, "value"))
-          return invalid();
-        visit(property.value);
+    if (!p || typeof p !== "object")
+      return r();
+    let a = Array.isArray(p), m = Object.getPrototypeOf(p);
+    if (m !== (a ? Array.prototype : Object.prototype) && m !== null)
+      return r();
+    if (Object.getOwnPropertySymbols(p).length)
+      return r();
+    if (t.has(p))
+      throw Error("Note data cannot contain cycles");
+    let g = Object.getOwnPropertyDescriptors(p), y = Object.hasOwn(g, "toJSON") ? g.toJSON : m && Object.getOwnPropertyDescriptor(m, "toJSON");
+    if (y && (!Object.hasOwn(y, "value") || typeof y.value === "function"))
+      return r();
+    if (t.add(p), a)
+      for (let f = 0;f < p.length; f++) {
+        let w = String(f), b = Object.hasOwn(g, w) ? g[w] : undefined;
+        if (!b || !Object.hasOwn(b, "value"))
+          return r();
+        l(b.value);
       }
-    }
-    for (const [key, property] of Object.entries(properties)) {
-      if (array) {
-        if (key === "length")
+    for (let [f, w] of Object.entries(g)) {
+      if (a) {
+        if (f === "length")
           continue;
-        if (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= part.length)
-          return invalid();
+        if (!/^(0|[1-9]\d*)$/.test(f) || Number(f) >= p.length)
+          return r();
         continue;
       }
-      if (!property.enumerable || !Object.hasOwn(property, "value"))
-        return invalid();
-      if (property.value !== undefined)
-        visit(property.value);
+      if (!w.enumerable || !Object.hasOwn(w, "value"))
+        return r();
+      if (w.value !== undefined)
+        l(w.value);
     }
-    seen.delete(part);
+    t.delete(p);
   };
-  visit(value);
+  l(n);
 }
-function freezeJson(value) {
-  assertJson(value);
-  const copy = structuredClone(value);
-  const freeze = (part) => {
-    if (part && typeof part === "object" && !Object.isFrozen(part)) {
-      Object.values(part).forEach(freeze);
-      Object.freeze(part);
-    }
+function z(n) {
+  e(n);
+  let t = structuredClone(n), r = (l) => {
+    if (l && typeof l === "object" && !Object.isFrozen(l))
+      Object.values(l).forEach(r), Object.freeze(l);
   };
-  freeze(copy);
-  return copy;
+  return r(t), t;
 }
-
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/triggers.ts
-var triggerKey = Symbol.for("worka.note-triggers.v3");
-function defineTriggers(note, declarations) {
-  if (!Array.isArray(declarations) || declarations.length > 32)
-    throw new Error("A note may declare at most 32 triggers");
-  const ids = new Set;
-  const captured = declarations.map((entry) => {
-    if (!entry || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(entry.id) || ids.has(entry.id))
-      throw new Error("Triggers require distinct stable ids");
-    ids.add(entry.id);
-    if (Object.keys(entry).some((key) => !["id", "on", "run", "input"].includes(key)))
-      throw new Error("Unknown trigger field");
-    const definition = capabilityDefinition(entry.run);
-    if (!definition || definition.model !== note || !["mutation", "action"].includes(definition.kind))
-      throw new Error("Triggers require this note’s mutation or action reference");
-    const on = entry.on;
-    if (!on || !["install", "interval", "event"].includes(on.type))
-      throw new Error("Unsupported trigger source");
-    const allowed = on.type === "install" ? ["type"] : on.type === "interval" ? ["type", "everyMs"] : ["type", "source", "name"];
-    if (Object.keys(on).some((key) => !allowed.includes(key)))
-      throw new Error("Unknown trigger source field");
-    if (on.type === "interval" && (!Number.isSafeInteger(on.everyMs) || on.everyMs < 1))
-      throw new Error("Trigger interval must be a positive integer");
-    if (on.type === "event") {
-      if (entry.input !== undefined)
-        throw new Error("Event triggers receive the event payload, not static input");
-      if (typeof on.name !== "string" || !on.name.trim())
-        throw new Error("An event trigger requires its event name");
-      const source = on.source;
-      if (!source || typeof source !== "object" || Object.keys(source).length !== 1 || !(("noteId" in source) && typeof source.noteId === "string" && source.noteId.length > 0) && !(("resource" in source) && source.resource && typeof source.resource.name === "string" && source.resource.name.length > 0))
-        throw new Error("Invalid event source locator");
+var Oe = Symbol.for("worka.note-triggers.v3");
+function W(n, t) {
+  if (!Array.isArray(t) || t.length > 32)
+    throw Error("A note may declare at most 32 triggers");
+  let r = new Set, l = t.map((p) => {
+    if (!p || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(p.id) || r.has(p.id))
+      throw Error("Triggers require distinct stable ids");
+    if (r.add(p.id), Object.keys(p).some((f) => !["id", "on", "run", "input"].includes(f)))
+      throw Error("Unknown trigger field");
+    let a = c(p.run);
+    if (!a || a.model !== n || !["mutation", "action"].includes(a.kind))
+      throw Error("Triggers require this note’s mutation or action reference");
+    let m = p.on;
+    if (!m || !["install", "interval", "event"].includes(m.type))
+      throw Error("Unsupported trigger source");
+    let g = m.type === "install" ? ["type"] : m.type === "interval" ? ["type", "everyMs"] : ["type", "source", "name"];
+    if (Object.keys(m).some((f) => !g.includes(f)))
+      throw Error("Unknown trigger source field");
+    if (m.type === "interval" && (!Number.isSafeInteger(m.everyMs) || m.everyMs < 1))
+      throw Error("Trigger interval must be a positive integer");
+    if (m.type === "event") {
+      if (p.input !== undefined)
+        throw Error("Event triggers receive the event payload, not static input");
+      if (typeof m.name !== "string" || !m.name.trim())
+        throw Error("An event trigger requires its event name");
+      let f = m.source;
+      if (!f || typeof f !== "object" || Object.keys(f).length !== 1 || !(("noteId" in f) && typeof f.noteId === "string" && f.noteId.length > 0) && !(("resource" in f) && f.resource && typeof f.resource.name === "string" && f.resource.name.length > 0))
+        throw Error("Invalid event source locator");
     }
-    const input = entry.input === undefined ? undefined : freezeJson(entry.input);
-    return Object.freeze({ id: entry.id, on: freezeJson(on), run: entry.run, ...input === undefined ? {} : { input } });
+    let y = p.input === undefined ? undefined : z(p.input);
+    return Object.freeze({ id: p.id, on: z(m), run: p.run, ...y === undefined ? {} : { input: y } });
   });
-  return Object.freeze({ [triggerKey]: Object.freeze({ note, declarations: Object.freeze(captured) }) });
+  return Object.freeze({ [Oe]: Object.freeze({ note: n, declarations: Object.freeze(l) }) });
 }
-function triggerContracts(value, note) {
-  const captured = value && typeof value === "object" ? value[triggerKey] : undefined;
-  if (!captured || captured.note !== note)
-    throw new Error("Triggers must be declared with this note.triggers");
-  return captured.declarations.map((entry) => {
-    const target = operationTarget(entry.run, note, ["mutation", "action"]);
-    const input = entry.on.type === "event" ? undefined : entry.input ?? {};
-    if (input !== undefined) {
-      assertJson(input);
-      const definition = capabilityDefinition(entry.run);
-      if (!definition.input.safeParse(input).success)
-        throw new Error(`Invalid input for trigger ${entry.id}`);
+function G(n, t) {
+  let r = n && typeof n === "object" ? n[Oe] : undefined;
+  if (!r || r.note !== t)
+    throw Error("Triggers must be declared with this note.triggers");
+  return r.declarations.map((l) => {
+    let p = J(l.run, t, ["mutation", "action"]), a = l.on.type === "event" ? undefined : l.input ?? {};
+    if (a !== undefined) {
+      if (e(a), !c(l.run).input.safeParse(a).success)
+        throw Error(`Invalid input for trigger ${l.id}`);
     }
-    return { id: entry.id, on: entry.on, target, ...input === undefined ? {} : { input } };
+    return { id: l.id, on: l.on, target: p, ...a === undefined ? {} : { input: a } };
   });
 }
-
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/contracts.ts
-var NOTE_ABI = 3;
-
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/capabilities.ts
-var definitionKey = Symbol.for("worka.note-capability.v3");
-var namesKey = Symbol.for("worka.note-operation-names.v3");
-var registry2 = globalThis;
-var names = registry2[namesKey] ?? new WeakMap;
-if (!registry2[namesKey])
-  Object.defineProperty(registry2, namesKey, { value: names });
-var emptyInput = /* @__PURE__ */ strictObject({});
-var emptyOutput = /* @__PURE__ */ _null3();
-function operation(kind, definition, handler) {
-  const inputSchema = definition.input ?? emptyInput;
-  const outputSchema = definition.output ?? emptyOutput;
-  const execute = async (wire, context) => {
-    const input = await inputSchema.parseAsync(wire === undefined && definition.input === undefined ? {} : wire);
-    assertJson(input);
-    const value = await handler(context, input);
-    if (definition.output === undefined) {
-      if (value !== undefined)
-        throw new Error("An operation without output must not return a business value");
+var Y = 3;
+var le = Symbol.for("worka.note-capability.v3");
+var ae = Symbol.for("worka.note-operation-names.v3");
+var ce = globalThis;
+var ue = ce[ae] ?? new WeakMap;
+if (!ce[ae])
+  Object.defineProperty(ce, ae, { value: ue });
+var ze = strictObject({});
+var qe = _null3();
+function Pe(n, t, r) {
+  let l = t.input ?? ze, p = t.output ?? qe, m = Object.freeze({ ...t, kind: n, input: l, output: p, execute: async (y, f) => {
+    let w = await l.parseAsync(y === undefined && t.input === undefined ? {} : y);
+    e(w);
+    let b = await r(f, w);
+    if (t.output === undefined) {
+      if (b !== undefined)
+        throw Error("An operation without output must not return a business value");
       return null;
     }
-    const result = await outputSchema.safeParseAsync(value);
-    if (!result.success)
-      throw new Error(`Capability output is invalid after execution: ${result.error.message}`);
-    assertJson(result.data);
-    return result.data;
-  };
-  const captured = Object.freeze({ ...definition, kind, input: inputSchema, output: outputSchema, execute });
-  const reference = { kind };
-  Object.defineProperty(reference, definitionKey, { value: captured });
-  return Object.freeze(reference);
+    let C = await p.safeParseAsync(b);
+    if (!C.success)
+      throw Error(`Capability output is invalid after execution: ${C.error.message}`);
+    return e(C.data), C.data;
+  } }), g = { kind: n };
+  return Object.defineProperty(g, le, { value: m }), Object.freeze(g);
 }
-function createEvent(definition) {
-  const captured = Object.freeze({ ...definition, kind: "event", output: definition.payload });
-  const event = { name: definition.name, async publish(context, payload, options) {
-    const value = await definition.payload.parseAsync(payload);
-    assertJson(value);
-    return context.events.publish(captured.name, value, options);
+function Ne(n) {
+  let t = Object.freeze({ ...n, kind: "event", output: n.payload }), r = { name: n.name, async publish(l, p, a) {
+    let m = await n.payload.parseAsync(p);
+    return e(m), l.events.publish(t.name, m, a);
   } };
-  Object.defineProperty(event, definitionKey, { value: captured });
-  return Object.freeze(event);
+  return Object.defineProperty(r, le, { value: t }), Object.freeze(r);
 }
-function capabilityDefinition(value) {
-  if (!value || typeof value !== "object")
+function c(n) {
+  if (!n || typeof n !== "object")
     return;
-  return value[definitionKey];
+  return n[le];
 }
-function operationTarget(reference, note, kinds) {
-  const definition = capabilityDefinition(reference);
-  const name = reference && typeof reference === "object" ? names.get(reference) : undefined;
-  if (!definition || definition.model !== note || !kinds.includes(definition.kind) || !name)
-    throw new Error("The operation must be an exported reference of the expected kind from this note");
-  return { kind: definition.kind, name };
+function J(n, t, r) {
+  let l = c(n), p = n && typeof n === "object" ? ue.get(n) : undefined;
+  if (!l || l.model !== t || !r.includes(l.kind) || !p)
+    throw Error("The operation must be an exported reference of the expected kind from this note");
+  return { kind: l.kind, name: p };
 }
-function schema(value, io) {
-  return JSON.parse(JSON.stringify(toJSONSchema(value, { io, unrepresentable: "throw" })));
+function de(n, t) {
+  return JSON.parse(JSON.stringify(toJSONSchema(n, { io: t, unrepresentable: "throw" })));
 }
-function describe2(name, definition) {
-  if (!/^[A-Za-z][A-Za-z\d_.-]*$/.test(name))
-    throw new Error(`Invalid capability name: ${name}`);
-  if (definition.visibility !== "private" && !definition.description?.trim())
-    throw new Error(`Public capability ${name} requires a description`);
-  for (const key of ["objectRef", "objectLabel", "revision"])
-    if (definition[key] !== undefined && !definition[key].startsWith("/"))
-      throw new Error(`${name}.${key} must be a JSON pointer`);
-  return {
-    name,
-    description: definition.description?.trim() || name,
-    ...definition.input ? { inputSchema: schema(definition.input, "input") } : {},
-    outputSchema: schema(definition.output, "output"),
-    ...definition.kind === "event" ? {} : { executionKind: definition.kind },
-    ...definition.visibility === "private" ? { visibility: "private" } : {},
-    ...Object.fromEntries(["objectRef", "objectLabel", "revision", "receipt"].filter((key) => definition[key] !== undefined).map((key) => [key, definition[key]]))
-  };
+function se(n, t) {
+  if (!/^[A-Za-z][A-Za-z\d_.-]*$/.test(n))
+    throw Error(`Invalid capability name: ${n}`);
+  if (t.visibility !== "private" && !t.description?.trim())
+    throw Error(`Public capability ${n} requires a description`);
+  for (let r of ["objectRef", "objectLabel", "revision"])
+    if (t[r] !== undefined && !t[r].startsWith("/"))
+      throw Error(`${n}.${r} must be a JSON pointer`);
+  return { name: n, description: t.description?.trim() || n, ...t.input ? { inputSchema: de(t.input, "input") } : {}, outputSchema: de(t.output, "output"), ...t.kind === "event" ? {} : { executionKind: t.kind }, ...t.visibility === "private" ? { visibility: "private" } : {}, ...Object.fromEntries(["objectRef", "objectLabel", "revision", "receipt"].filter((r) => t[r] !== undefined).map((r) => [r, t[r]])) };
 }
-function describeCapabilities(module) {
-  const model = noteDefinition(module.note);
-  if (!model)
-    throw new Error("This note requires ABI 3: export note = defineNote(...) with native collections");
-  const contract = { schemaVersion: NOTE_ABI, actions: [], queries: [], events: [], model: {} };
-  const collections = collectionSchemas(model.collections);
-  if (collections.length)
-    contract.model.collections = Object.fromEntries(collections.map((item) => [item.name, item.contract]));
-  if (model.config) {
-    const configSchema = schema(model.config.schema, "input");
-    contract.model.config = { schema: configSchema, defaults: model.config.defaults, required: Array.isArray(configSchema.required) ? configSchema.required : [] };
+function me(n) {
+  let t = s(n.note);
+  if (!t)
+    throw Error("This note requires ABI 3: export note = defineNote(...) with native collections");
+  let r = { schemaVersion: Y, actions: [], queries: [], events: [], model: {} }, l = x(t.collections);
+  if (l.length)
+    r.model.collections = Object.fromEntries(l.map((g) => [g.name, g.contract]));
+  if (t.config) {
+    let g = de(t.config.schema, "input");
+    r.model.config = { schema: g, defaults: t.config.defaults, required: Array.isArray(g.required) ? g.required : [] };
   }
-  if (model.resources?.length)
-    contract.resources = freezeJson(model.resources);
-  const update = model.update ?? { dataVersion: "1" };
-  if (!update.dataVersion?.trim())
-    throw new Error("Invalid model data version");
-  const checks = (update.checks ?? []).map((check) => check.name);
-  if (checks.some((name) => !name?.trim()) || new Set(checks).size !== checks.length)
-    throw new Error("Model checks require distinct names");
-  contract.update = { dataVersion: update.dataVersion, checks };
-  const seen = new Set;
-  for (const [name, value] of Object.entries(module)) {
-    const definition = capabilityDefinition(value);
-    if (!definition)
+  if (t.resources?.length)
+    r.resources = z(t.resources);
+  let p = t.update ?? { dataVersion: "1" };
+  if (!p.dataVersion?.trim())
+    throw Error("Invalid model data version");
+  let a = (p.checks ?? []).map((g) => g.name);
+  if (a.some((g) => !g?.trim()) || new Set(a).size !== a.length)
+    throw Error("Model checks require distinct names");
+  r.update = { dataVersion: p.dataVersion, checks: a };
+  let m = new Set;
+  for (let [g, y] of Object.entries(n)) {
+    let f = c(y);
+    if (!f)
       continue;
-    if (definition.model !== module.note)
-      throw new Error(`Capability ${name} belongs to another note`);
-    if (seen.has(value))
-      throw new Error("An operation/event reference must have exactly one exported name");
-    seen.add(value);
-    names.set(value, name);
-    if (definition.kind === "event") {
-      if (!definition.name || contract.events.some((event) => event.name === definition.name))
-        throw new Error("Business events require unique declared names");
-      contract.events.push(describe2(definition.name, definition));
-    } else if (definition.kind === "query")
-      contract.queries.push(describe2(name, definition));
+    if (f.model !== n.note)
+      throw Error(`Capability ${g} belongs to another note`);
+    if (m.has(y))
+      throw Error("An operation/event reference must have exactly one exported name");
+    if (m.add(y), ue.set(y, g), f.kind === "event") {
+      if (!f.name || r.events.some((w) => w.name === f.name))
+        throw Error("Business events require unique declared names");
+      r.events.push(se(f.name, f));
+    } else if (f.kind === "query")
+      r.queries.push(se(g, f));
     else
-      contract.actions.push(describe2(name, definition));
+      r.actions.push(se(g, f));
   }
-  if (module.triggers !== undefined)
-    contract.triggers = triggerContracts(module.triggers, module.note);
-  for (const key of ["actions", "queries", "events"])
-    contract[key].sort((a, b) => a.name.localeCompare(b.name));
-  return contract;
+  if (n.triggers !== undefined)
+    r.triggers = G(n.triggers, n.note);
+  for (let g of ["actions", "queries", "events"])
+    r[g].sort((y, f) => y.name.localeCompare(f.name));
+  return r;
 }
 
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/operation-error.ts
-class OperationRejectedError extends Error {
+class i extends Error {
   code = "operation-rejected";
-  constructor(message) {
-    super(message);
+  constructor(n) {
+    super(n);
     this.name = "OperationRejectedError";
   }
 }
-
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/note.ts
-var modelKey = Symbol.for("worka.note-model.v3");
-function mode(raw, expected) {
-  if (raw.executionKind !== expected)
-    throw new OperationRejectedError(`This operation requires a ${expected} execution context`);
+var Se = Symbol.for("worka.note-model.v3");
+function H(n, t) {
+  if (n.executionKind !== t)
+    throw new i(`This operation requires a ${t} execution context`);
 }
-function identity(raw) {
-  return Object.freeze({ id: raw.note.id, version: raw.note.version ?? "unknown" });
+function pe(n) {
+  return Object.freeze({ id: n.note.id, version: n.note.version ?? "unknown" });
 }
-function data(raw) {
-  if (!raw.data)
-    throw new Error("This host does not provide ABI 3 native data sessions");
-  return raw.data;
+function B(n) {
+  if (!n.data)
+    throw Error("This host does not provide ABI 3 native data sessions");
+  return n.data;
 }
-function writer(raw) {
-  mode(raw, "mutation");
-  const host = data(raw);
-  if (!("put" in host))
-    throw new Error("A mutation requires a writable native data session");
-  return host;
+function _(n) {
+  H(n, "mutation");
+  let t = B(n);
+  if (!("put" in t))
+    throw Error("A mutation requires a writable native data session");
+  return t;
 }
-function declarations(note) {
-  const definition = noteDefinition(note);
-  if (!definition)
-    throw new Error("Missing ABI 3 note model");
-  return definition.collections ?? {};
+function Fe(n) {
+  let t = s(n);
+  if (!t)
+    throw Error("Missing ABI 3 note model");
+  return t.collections ?? {};
 }
-function collectionAccess(note, raw, writable) {
-  const collections = declarations(note);
-  const declared = (name) => {
-    if (!Object.hasOwn(collections, name))
-      throw new Error(`Unknown collection: ${name}`);
-    return collections[name];
-  };
-  const key = (id) => {
-    if (typeof id !== "string" || !id.length || id.length > 512)
-      throw new Error("Invalid record id");
-    return id;
-  };
-  const parse = (name, value) => {
-    if (!value || typeof value !== "object" || Array.isArray(value) || Object.hasOwn(value, "id"))
-      throw new Error("Business values must be objects without the system id");
-    assertJson(value);
-    const parsed = declared(name).schema.parse(value);
-    assertJson(parsed);
-    return parsed;
-  };
-  const get = async (name, id) => {
-    declared(name);
-    return freezeJson(await data(raw).get(name, key(id)));
-  };
-  const read = { get, page: async (name, options = {}) => {
-    const request = validatePageOptions(declared(name), options);
-    assertJson(request);
-    return freezeJson(await data(raw).page(name, request));
+function Ie(n, t, r) {
+  let l = Fe(n), p = (f) => {
+    if (!Object.hasOwn(l, f))
+      throw Error(`Unknown collection: ${f}`);
+    return l[f];
+  }, a = (f) => {
+    if (typeof f !== "string" || !f.length || f.length > 512)
+      throw Error("Invalid record id");
+    return f;
+  }, m = (f, w) => {
+    if (!w || typeof w !== "object" || Array.isArray(w) || Object.hasOwn(w, "id"))
+      throw Error("Business values must be objects without the system id");
+    e(w);
+    let b = p(f).schema.parse(w);
+    return e(b), b;
+  }, g = async (f, w) => (p(f), z(await B(t).get(f, a(w)))), y = { get: g, page: async (f, w = {}) => {
+    let b = Z(p(f), w);
+    return e(b), z(await B(t).page(f, b));
   } };
-  if (!writable)
-    return Object.freeze(read);
-  return Object.freeze({
-    ...read,
-    insert: async (name, value) => writer(raw).insert(name, parse(name, value)),
-    put: async (name, id, value) => writer(raw).put(name, key(id), parse(name, value)),
-    patch: async (name, id, patch) => {
-      declared(name);
-      if (!patch || typeof patch !== "object" || Array.isArray(patch) || Object.hasOwn(patch, "id"))
-        throw new Error("A patch must be a business object without id");
-      assertJson(patch);
-      const row = await get(name, id);
-      if (!row)
-        throw new Error(`Record not found: ${id}`);
-      const { id: _id, ...value } = row;
-      await writer(raw).put(name, key(id), parse(name, { ...value, ...patch }));
-    },
-    delete: async (name, id) => {
-      declared(name);
-      await writer(raw).delete(name, key(id));
-    }
-  });
+  if (!r)
+    return Object.freeze(y);
+  return Object.freeze({ ...y, insert: async (f, w) => _(t).insert(f, m(f, w)), put: async (f, w, b) => _(t).put(f, a(w), m(f, b)), patch: async (f, w, b) => {
+    if (p(f), !b || typeof b !== "object" || Array.isArray(b) || Object.hasOwn(b, "id"))
+      throw Error("A patch must be a business object without id");
+    e(b);
+    let C = await g(f, w);
+    if (!C)
+      throw Error(`Record not found: ${w}`);
+    let { id: R, ...K } = C;
+    await _(t).put(f, a(w), m(f, { ...K, ...b }));
+  }, delete: async (f, w) => {
+    p(f), await _(t).delete(f, a(w));
+  } });
 }
-function configAccess(note, raw, writable) {
-  const config = noteDefinition(note)?.config;
-  if (!config)
+function je(n, t, r) {
+  let l = s(n)?.config;
+  if (!l)
     return {};
-  const read = async () => freezeJson(config.schema.partial().parse(await data(raw).getConfig()));
-  return { config: Object.freeze({ read, ...writable ? { update: async (value) => {
-    assertJson(value);
-    const patch = config.schema.partial().parse(value);
-    assertJson(patch);
-    await writer(raw).patchConfig(patch);
+  return { config: Object.freeze({ read: async () => z(l.schema.partial().parse(await B(t).getConfig())), ...r ? { update: async (a) => {
+    e(a);
+    let m = l.schema.partial().parse(a);
+    e(m), await _(t).patchConfig(m);
   } } : {} }) };
 }
-function bindQueryContext(note, raw) {
-  mode(raw, "query");
-  return Object.freeze({
-    note: identity(raw),
-    signal: raw.signal,
-    db: collectionAccess(note, raw, false),
-    notes: Object.freeze({ lookup: async (query) => {
-      if (!query || typeof query.id !== "string" || !query.id || Object.keys(query).some((key) => key !== "id"))
-        throw new Error("A query may look up one note by id only");
-      const notes = raw.notes;
-      if (!notes)
-        throw new Error("This host does not provide note metadata queries");
-      return freezeJson((await notes.lookup({ id: query.id })).map(({ id, name, icon, desktopId }) => ({ id, name, ...icon ? { icon } : {}, ...desktopId ? { desktopId } : {} })));
-    } }),
-    resources: Object.freeze({ read: (request) => {
-      const resources = raw.resources;
-      if (!resources)
-        throw new Error("This host does not provide published resource snapshots");
-      return resources.read(request);
-    } }),
-    ...configAccess(note, raw, false)
-  });
+function N(n, t) {
+  return H(t, "query"), Object.freeze({ note: pe(t), signal: t.signal, db: Ie(n, t, false), notes: Object.freeze({ lookup: async (r) => {
+    if (!r || typeof r.id !== "string" || !r.id || Object.keys(r).some((p) => p !== "id"))
+      throw Error("A query may look up one note by id only");
+    let l = t.notes;
+    if (!l)
+      throw Error("This host does not provide note metadata queries");
+    return z((await l.lookup({ id: r.id })).map(({ id: p, name: a, icon: m, desktopId: g }) => ({ id: p, name: a, ...m ? { icon: m } : {}, ...g ? { desktopId: g } : {} })));
+  } }), resources: Object.freeze({ read: (r) => {
+    let l = t.resources;
+    if (!l)
+      throw Error("This host does not provide published resource snapshots");
+    return l.read(r);
+  } }), ...je(n, t, false) });
 }
-function bindMutationContext(note, raw) {
-  mode(raw, "mutation");
-  const schedule = async (timing, reference, input = {}) => {
-    const number = "afterMs" in timing ? timing.afterMs : timing.at;
-    if (!Number.isSafeInteger(number) || number < 0)
-      throw new Error("Schedule time must be a nonnegative integer");
-    const target = operationTarget(reference, note, ["mutation", "action"]);
-    assertJson(input);
-    if (!raw.schedule)
-      throw new Error("This host does not provide transactional scheduling");
-    return raw.schedule({ timing, target, input });
+function X(n, t) {
+  H(t, "mutation");
+  let r = async (l, p, a = {}) => {
+    let m = "afterMs" in l ? l.afterMs : l.at;
+    if (!Number.isSafeInteger(m) || m < 0)
+      throw Error("Schedule time must be a nonnegative integer");
+    let g = J(p, n, ["mutation", "action"]);
+    if (e(a), !t.schedule)
+      throw Error("This host does not provide transactional scheduling");
+    return t.schedule({ timing: l, target: g, input: a });
   };
-  return Object.freeze({
-    note: identity(raw),
-    signal: raw.signal,
-    caller: raw.caller,
-    db: collectionAccess(note, raw, true),
-    events: Object.freeze({ publish: (...args) => {
-      const events = raw.events;
-      if (!events)
-        throw new Error("This host does not provide transactional event publishing");
-      return events.publish(...args);
-    } }),
-    scheduler: Object.freeze({
-      runAfter: (afterMs, ref, input) => schedule({ afterMs }, ref, input),
-      runAt: (at, ref, input) => schedule({ at }, ref, input)
-    }),
-    ...configAccess(note, raw, true)
-  });
+  return Object.freeze({ note: pe(t), signal: t.signal, caller: t.caller, db: Ie(n, t, true), events: Object.freeze({ publish: (...l) => {
+    let p = t.events;
+    if (!p)
+      throw Error("This host does not provide transactional event publishing");
+    return p.publish(...l);
+  } }), scheduler: Object.freeze({ runAfter: (l, p, a) => r({ afterMs: l }, p, a), runAt: (l, p, a) => r({ at: l }, p, a) }), ...je(n, t, true) });
 }
-function bindActionContext(note, raw) {
-  mode(raw, "action");
-  const invoke = async (kind, reference, input = {}) => {
-    const target = operationTarget(reference, note, [kind]);
-    assertJson(input);
-    if (!raw.invoke)
-      throw new Error("This host does not provide nested operation invocation");
-    return raw.invoke({ kind, name: target.name, input });
-  };
-  const action = raw;
-  const { agent, notifications, previews, extensions, quip, slack, subprocess } = action;
-  return Object.freeze({
-    note: identity(raw),
-    signal: raw.signal,
-    progress: action.progress,
-    caller: action.caller,
-    ...action.replay ? { replay: true } : {},
-    id: () => crypto.randomUUID(),
-    idempotencyKey: action.caller?.requestId ?? `execution:${action.caller?.id ?? crypto.randomUUID()}`,
-    files: action.files,
-    notes: action.notes,
-    notify: action.notify,
-    resources: Object.freeze({ read: (request) => action.resources.read(request), revalidate: (request) => action.resources.revalidate(request) }),
-    host: Object.freeze({ agent: Object.freeze({
-      ...agent?.guidance ? { guidance: agent.guidance.bind(agent) } : {},
-      ...agent?.prepare ? { prepare: agent.prepare.bind(agent) } : {},
-      ...agent?.stop ? { stop: agent.stop.bind(agent) } : {},
-      result: (runId) => agent.result(runId, { wait: false })
-    }), notifications, previews, extensions, quip, slack, subprocess: Object.freeze({ exec: subprocess?.exec?.bind(subprocess) }) }),
-    jobs: Object.freeze({
-      infer: (request, options) => {
-        const onComplete = operationTarget(options.onComplete, note, ["mutation", "action"]);
-        assertJson(request);
-        if (!raw.jobs)
-          throw new Error("This host does not provide managed tasks");
-        return raw.jobs.infer({ request, onComplete });
-      },
-      result: (taskId) => {
-        if (!raw.jobs)
-          throw new Error("This host does not provide managed tasks");
-        return raw.jobs.result(taskId);
-      },
-      cancel: (taskId) => {
-        if (!raw.jobs)
-          throw new Error("This host does not provide managed tasks");
-        return raw.jobs.cancel(taskId);
-      },
-      runAgent: (request, options) => {
-        const onComplete = operationTarget(options.onComplete, note, ["mutation", "action"]);
-        assertJson(request);
-        if (!raw.jobs)
-          throw new Error("This host does not provide managed tasks");
-        return raw.jobs.runAgent({ request, onComplete });
-      }
-    }),
-    runQuery: (reference, input) => invoke("query", reference, input),
-    runMutation: (reference, input) => invoke("mutation", reference, input)
-  });
+function ee(n, t) {
+  H(t, "action");
+  let r = async (b, C, R = {}) => {
+    let K = J(C, n, [b]);
+    if (e(R), !t.invoke)
+      throw Error("This host does not provide nested operation invocation");
+    return t.invoke({ kind: b, name: K.name, input: R });
+  }, l = t, { agent: p, notifications: a, previews: m, extensions: g, quip: y, slack: f, subprocess: w } = l;
+  return Object.freeze({ note: pe(t), signal: t.signal, progress: l.progress, caller: l.caller, ...l.replay ? { replay: true } : {}, id: () => crypto.randomUUID(), idempotencyKey: l.caller?.requestId ?? `execution:${l.caller?.id ?? crypto.randomUUID()}`, files: l.files, notes: l.notes, notify: l.notify, resources: Object.freeze({ read: (b) => l.resources.read(b), revalidate: (b) => l.resources.revalidate(b) }), host: Object.freeze({ agent: Object.freeze({ ...p?.guidance ? { guidance: p.guidance.bind(p) } : {}, ...p?.prepare ? { prepare: p.prepare.bind(p) } : {}, ...p?.stop ? { stop: p.stop.bind(p) } : {}, result: (b) => p.result(b, { wait: false }) }), notifications: a, previews: m, extensions: g, quip: y, slack: f, subprocess: Object.freeze({ exec: w?.exec?.bind(w) }) }), jobs: Object.freeze({ infer: (b, C) => {
+    let R = J(C.onComplete, n, ["mutation", "action"]);
+    if (e(b), !t.jobs)
+      throw Error("This host does not provide managed tasks");
+    return t.jobs.infer({ request: b, onComplete: R });
+  }, result: (b) => {
+    if (!t.jobs)
+      throw Error("This host does not provide managed tasks");
+    return t.jobs.result(b);
+  }, cancel: (b) => {
+    if (!t.jobs)
+      throw Error("This host does not provide managed tasks");
+    return t.jobs.cancel(b);
+  }, runAgent: (b, C) => {
+    let R = J(C.onComplete, n, ["mutation", "action"]);
+    if (e(b), !t.jobs)
+      throw Error("This host does not provide managed tasks");
+    return t.jobs.runAgent({ request: b, onComplete: R });
+  } }), runQuery: (b, C) => r("query", b, C), runMutation: (b, C) => r("mutation", b, C) });
 }
-function defineNote(definition) {
-  if (!definition || typeof definition !== "object" || Object.keys(definition).some((key) => !["collections", "config", "resources", "update"].includes(key)))
-    throw new Error("ABI 3 notes use native collections; state/background and unknown model fields are unsupported");
-  if (definition.update && Object.keys(definition.update).some((key) => !["dataVersion", "checks"].includes(key)))
-    throw new Error("Model update accepts only dataVersion and checks");
-  const collections = collectionSchemas(definition.collections);
-  if (definition.config && !(definition.config.schema instanceof ZodObject))
-    throw new Error("Config schema must be an object");
-  if (definition.resources && definition.resources.length > 32)
-    throw new Error("A note may declare at most 32 resource needs");
-  const captured = Object.freeze({
-    ...definition,
-    collections: Object.freeze(Object.fromEntries(collections.map((item) => [item.name, item.definition]))),
-    ...definition.config ? { config: Object.freeze({ schema: definition.config.schema, defaults: freezeJson(definition.config.schema.partial().parse(definition.config.defaults)) }) } : {},
-    ...definition.resources ? { resources: freezeJson(definition.resources) } : {}
-  });
-  const build = (kind, metadata, run) => operation(kind, { ...metadata, visibility: metadata.visibility ?? (kind === "query" ? "public" : "private"), model: note }, async (raw, input) => {
-    mode(raw, kind);
-    if (kind === "action" && metadata.requiresConfig !== false && captured.config) {
-      if (!captured.config.schema.safeParse(await data(raw).getConfig()).success)
-        throw new OperationRejectedError("Complete this note’s configuration before running this action");
+function O(n) {
+  if (!n || typeof n !== "object" || Object.keys(n).some((a) => !["collections", "config", "resources", "update"].includes(a)))
+    throw Error("ABI 3 notes use native collections; state/background and unknown model fields are unsupported");
+  if (n.update && Object.keys(n.update).some((a) => !["dataVersion", "checks"].includes(a)))
+    throw Error("Model update accepts only dataVersion and checks");
+  let t = x(n.collections);
+  if (n.config && !(n.config.schema instanceof ZodObject))
+    throw Error("Config schema must be an object");
+  if (n.resources && n.resources.length > 32)
+    throw Error("A note may declare at most 32 resource needs");
+  let r = Object.freeze({ ...n, collections: Object.freeze(Object.fromEntries(t.map((a) => [a.name, a.definition]))), ...n.config ? { config: Object.freeze({ schema: n.config.schema, defaults: z(n.config.schema.partial().parse(n.config.defaults)) }) } : {}, ...n.resources ? { resources: z(n.resources) } : {} }), l = (a, m, g) => Pe(a, { ...m, visibility: m.visibility ?? (a === "query" ? "public" : "private"), model: p }, async (y, f) => {
+    if (H(y, a), a === "action" && m.requiresConfig !== false && r.config) {
+      if (!r.config.schema.safeParse(await B(y).getConfig()).success)
+        throw new i("Complete this note’s configuration before running this action");
     }
-    const context = kind === "query" ? bindQueryContext(note, raw) : kind === "mutation" ? bindMutationContext(note, raw) : bindActionContext(note, raw);
-    return run(context, input);
-  });
-  const note = {
-    [modelKey]: captured,
-    collections: Object.freeze(Object.fromEntries(collections.map((item) => [item.name, item.model]))),
-    query: (metadata, run) => build("query", metadata, run),
-    mutation: (metadata, run) => build("mutation", metadata, run),
-    action: (metadata, run) => build("action", metadata, run),
-    event: (metadata) => createEvent({ ...metadata, visibility: metadata.visibility ?? "private", model: note }),
-    triggers: (declarations) => defineTriggers(note, declarations)
-  };
-  return Object.freeze(note);
+    let w = a === "query" ? N(p, y) : a === "mutation" ? X(p, y) : ee(p, y);
+    return g(w, f);
+  }), p = { [Se]: r, collections: Object.freeze(Object.fromEntries(t.map((a) => [a.name, a.model]))), query: (a, m) => l("query", a, m), mutation: (a, m) => l("mutation", a, m), action: (a, m) => l("action", a, m), event: (a) => Ne({ ...a, visibility: a.visibility ?? "private", model: p }), triggers: (a) => W(p, a) };
+  return Object.freeze(p);
 }
-function noteDefinition(value) {
-  return value !== null && typeof value === "object" ? value[modelKey] : undefined;
+function s(n) {
+  return n !== null && typeof n === "object" ? n[Se] : undefined;
 }
-async function validateNoteModel(note, raw) {
-  const definition = noteDefinition(note);
-  if (!definition)
-    throw new Error("Missing ABI 3 note model");
-  if (definition.config)
-    assertJson(definition.config.schema.partial().parse(await data(raw).getConfig()));
+async function ye(n, t) {
+  let r = s(n);
+  if (!r)
+    throw Error("Missing ABI 3 note model");
+  if (r.config)
+    e(r.config.schema.partial().parse(await B(t).getConfig()));
 }
-async function checkNoteModel(note, name, raw) {
-  const check = noteDefinition(note)?.update?.checks?.find((item) => item.name === name);
-  if (!check)
-    throw new Error(`Unknown model check: ${name}`);
-  return await check.run(bindQueryContext(note, raw)) === true;
+async function be(n, t, r) {
+  let l = s(n)?.update?.checks?.find((p) => p.name === t);
+  if (!l)
+    throw Error(`Unknown model check: ${t}`);
+  return await l.run(N(n, r)) === true;
 }
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/preview-project.mjs
-var compiled = Symbol.for("worka.preview.project");
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/note-file-reference.ts
-var NOTE_FILE_MAX_BYTES = 4 * 1024 * 1024;
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/note-control.ts
-function isNoteController(caller, noteId) {
-  return caller.kind === "user" || caller.kind === "iframe" || caller.kind === "agent" && caller.controlNoteId === noteId;
+var ie = (() => object({ id: string2().regex(I) }))();
+function j(n, t) {
+  return n.kind === "user" || n.kind === "iframe" || n.kind === "agent" && n.controlNoteId === t;
 }
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/sha256.ts
-function sha256(value) {
-  const bytes = typeof value === "string" ? utf8(value) : value;
-  const size = Math.ceil((bytes.length + 9) / 64) * 64, padded = new Uint8Array(size);
-  padded.set(bytes);
-  padded[bytes.length] = 128;
-  const view = new DataView(padded.buffer);
-  view.setUint32(size - 8, Math.floor(bytes.length / 536870912));
-  view.setUint32(size - 4, bytes.length * 8 >>> 0);
-  const state = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]), w = new Uint32Array(64);
-  const rotate = (x, n) => x >>> n | x << 32 - n;
-  for (let offset = 0;offset < size; offset += 64) {
-    for (let i = 0;i < 16; i++)
-      w[i] = view.getUint32(offset + i * 4);
-    for (let i = 16;i < 64; i++) {
-      const a = w[i - 15], b = w[i - 2];
-      w[i] = (rotate(a, 7) ^ rotate(a, 18) ^ a >>> 3) + w[i - 16] + (rotate(b, 17) ^ rotate(b, 19) ^ b >>> 10) + w[i - 7];
+var M = (() => strictObject({ taskId: string2().min(1), requestId: string2().optional(), delegationId: string2().optional(), result: strictObject({ runId: string2().min(1), status: _enum(["queued", "running", "completed", "failed", "cancelled", "needs-input", "unknown"]), value: json().optional(), text: string2().optional(), error: string2().optional(), interrupted: boolean2().optional(), detail: string2().optional(), detailNextOffset: number2().int().nonnegative().optional(), detailTruncated: boolean2().optional(), detailExpired: boolean2().optional() }) }))();
+function q(n) {
+  let t = typeof n === "string" ? Je(n) : n, r = Math.ceil((t.length + 9) / 64) * 64, l = new Uint8Array(r);
+  l.set(t), l[t.length] = 128;
+  let p = new DataView(l.buffer);
+  p.setUint32(r - 8, Math.floor(t.length / 536870912)), p.setUint32(r - 4, t.length * 8 >>> 0);
+  let a = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]), m = new Uint32Array(64), g = (y, f) => y >>> f | y << 32 - f;
+  for (let y = 0;y < r; y += 64) {
+    for (let k = 0;k < 16; k++)
+      m[k] = p.getUint32(y + k * 4);
+    for (let k = 16;k < 64; k++) {
+      let V = m[k - 15], U = m[k - 2];
+      m[k] = (g(V, 7) ^ g(V, 18) ^ V >>> 3) + m[k - 16] + (g(U, 17) ^ g(U, 19) ^ U >>> 10) + m[k - 7];
     }
-    let [a, b, c, d, e, f, g, h] = state;
-    for (let i = 0;i < 64; i++) {
-      const t1 = h + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + (e & f ^ ~e & g) + K[i] + w[i] >>> 0;
-      const t2 = (rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + (a & b ^ a & c ^ b & c) >>> 0;
-      h = g;
-      g = f;
-      f = e;
-      e = d + t1 >>> 0;
-      d = c;
-      c = b;
-      b = a;
-      a = t1 + t2 >>> 0;
+    let [f, w, b, C, R, K, L, Q] = a;
+    for (let k = 0;k < 64; k++) {
+      let V = Q + (g(R, 6) ^ g(R, 11) ^ g(R, 25)) + (R & K ^ ~R & L) + Ke[k] + m[k] >>> 0, U = (g(f, 2) ^ g(f, 13) ^ g(f, 22)) + (f & w ^ f & b ^ w & b) >>> 0;
+      Q = L, L = K, K = R, R = C + V >>> 0, C = b, b = w, w = f, f = V + U >>> 0;
     }
-    const result = [a, b, c, d, e, f, g, h];
-    for (let i = 0;i < 8; i++)
-      state[i] = state[i] + result[i] >>> 0;
+    let Ee = [f, w, b, C, R, K, L, Q];
+    for (let k = 0;k < 8; k++)
+      a[k] = a[k] + Ee[k] >>> 0;
   }
-  return [...state].map((word) => word.toString(16).padStart(8, "0")).join("");
+  return [...a].map((y) => y.toString(16).padStart(8, "0")).join("");
 }
-var K = new Uint32Array([
-  1116352408,
-  1899447441,
-  3049323471,
-  3921009573,
-  961987163,
-  1508970993,
-  2453635748,
-  2870763221,
-  3624381080,
-  310598401,
-  607225278,
-  1426881987,
-  1925078388,
-  2162078206,
-  2614888103,
-  3248222580,
-  3835390401,
-  4022224774,
-  264347078,
-  604807628,
-  770255983,
-  1249150122,
-  1555081692,
-  1996064986,
-  2554220882,
-  2821834349,
-  2952996808,
-  3210313671,
-  3336571891,
-  3584528711,
-  113926993,
-  338241895,
-  666307205,
-  773529912,
-  1294757372,
-  1396182291,
-  1695183700,
-  1986661051,
-  2177026350,
-  2456956037,
-  2730485921,
-  2820302411,
-  3259730800,
-  3345764771,
-  3516065817,
-  3600352804,
-  4094571909,
-  275423344,
-  430227734,
-  506948616,
-  659060556,
-  883997877,
-  958139571,
-  1322822218,
-  1537002063,
-  1747873779,
-  1955562222,
-  2024104815,
-  2227730452,
-  2361852424,
-  2428436474,
-  2756734187,
-  3204031479,
-  3329325298
-]);
-function utf8(value) {
-  let size = 0;
-  for (const character of value) {
-    const code = character.codePointAt(0);
-    size += code < 128 ? 1 : code < 2048 ? 2 : code < 65536 ? 3 : 4;
+var Ke = new Uint32Array([1116352408, 1899447441, 3049323471, 3921009573, 961987163, 1508970993, 2453635748, 2870763221, 3624381080, 310598401, 607225278, 1426881987, 1925078388, 2162078206, 2614888103, 3248222580, 3835390401, 4022224774, 264347078, 604807628, 770255983, 1249150122, 1555081692, 1996064986, 2554220882, 2821834349, 2952996808, 3210313671, 3336571891, 3584528711, 113926993, 338241895, 666307205, 773529912, 1294757372, 1396182291, 1695183700, 1986661051, 2177026350, 2456956037, 2730485921, 2820302411, 3259730800, 3345764771, 3516065817, 3600352804, 4094571909, 275423344, 430227734, 506948616, 659060556, 883997877, 958139571, 1322822218, 1537002063, 1747873779, 1955562222, 2024104815, 2227730452, 2361852424, 2428436474, 2756734187, 3204031479, 3329325298]);
+function Je(n) {
+  let t = 0;
+  for (let p of n) {
+    let a = p.codePointAt(0);
+    t += a < 128 ? 1 : a < 2048 ? 2 : a < 65536 ? 3 : 4;
   }
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const character of value) {
-    let code = character.codePointAt(0);
-    if (code >= 55296 && code <= 57343)
-      code = 65533;
-    if (code < 128)
-      bytes[offset++] = code;
-    else if (code < 2048) {
-      bytes[offset++] = 192 | code >>> 6;
-      bytes[offset++] = 128 | code & 63;
-    } else if (code < 65536) {
-      bytes[offset++] = 224 | code >>> 12;
-      bytes[offset++] = 128 | code >>> 6 & 63;
-      bytes[offset++] = 128 | code & 63;
-    } else {
-      bytes[offset++] = 240 | code >>> 18;
-      bytes[offset++] = 128 | code >>> 12 & 63;
-      bytes[offset++] = 128 | code >>> 6 & 63;
-      bytes[offset++] = 128 | code & 63;
-    }
+  let r = new Uint8Array(t), l = 0;
+  for (let p of n) {
+    let a = p.codePointAt(0);
+    if (a >= 55296 && a <= 57343)
+      a = 65533;
+    if (a < 128)
+      r[l++] = a;
+    else if (a < 2048)
+      r[l++] = 192 | a >>> 6, r[l++] = 128 | a & 63;
+    else if (a < 65536)
+      r[l++] = 224 | a >>> 12, r[l++] = 128 | a >>> 6 & 63, r[l++] = 128 | a & 63;
+    else
+      r[l++] = 240 | a >>> 18, r[l++] = 128 | a >>> 12 & 63, r[l++] = 128 | a >>> 6 & 63, r[l++] = 128 | a & 63;
   }
-  return bytes;
+  return r;
 }
+
+// .sdk/runtime/dist/chunk-58hjd531.mjs
+var m = Symbol.for("worka.preview.project");
+
 // model.ts
 var chatSchema = object({ id: string2(), name: string2(), type: _enum(["private", "group"]) });
 var handlingSchema = object({
@@ -6868,7 +6645,7 @@ var inboxSchema = object({
   chats: array(chatSchema.extend({ count: number2(), latest: messageSchema.nullable(), unread: boolean2() }))
 });
 var statusSchema = object({ enabled: boolean2(), paused: boolean2(), error: string2().nullable(), nextRunAt: number2().nullable(), selectedCount: number2().int().nonnegative(), authorized: boolean2(), automatic: boolean2(), since: number2() });
-var note = defineNote({ collections: { handling: { schema: handlingSchema }, reads: { schema: object({ through: number2().int().nonnegative() }) } }, update: { dataVersion: "wechat-native@3" } });
+var note = O({ collections: { handling: { schema: handlingSchema }, reads: { schema: object({ through: number2().int().nonnegative() }) } }, update: { dataVersion: "wechat-native@3" } });
 var relatedTaskSchema = object({ noteId: string2(), delegationId: string2(), title: string2(), status: string2(), archived: boolean2(), summary: string2(), replySuggestion: string2(), revision: string2(), messageIds: array(string2()) });
 
 // actions.ts
@@ -6901,7 +6678,7 @@ async function authorizedMessages(ctx, id) {
 }
 async function handled(ctx, id, messages2) {
   return Promise.all(messages2.map(async (message) => {
-    const saved = await ctx.db.get("handling", sha256(JSON.stringify([id, message.id])));
+    const saved = await ctx.db.get("handling", q(JSON.stringify([id, message.id])));
     return { ...message, ...saved ?? message.handling ? { handling: saved ?? message.handling } : {} };
   }));
 }
@@ -7072,7 +6849,7 @@ var recordHandling = note.action({
   }),
   output: object({ itemId: string2(), messageId: string2(), handling: handlingSchema })
 }, async (ctx, input) => {
-  if (!isNoteController(ctx.caller, ctx.note.id) && !ctx.caller.skillCause?.chain.length)
+  if (!j(ctx.caller, ctx.note.id) && !ctx.caller.skillCause?.chain.length)
     throw Error("需要所属便笺或已登记联动的操作授权");
   const { messages: messages2 } = await getMessages(ctx, input.id);
   const message = messages2.find((row) => row.id === input.messageId);
@@ -7099,9 +6876,9 @@ var recordHandling = note.action({
   return { itemId: input.id, messageId: input.messageId, handling };
 });
 var saveHandling = note.mutation({ visibility: "private", input: object({ id: string2(), messageId: string2(), handling: handlingSchema }) }, async (ctx, input) => {
-  if (!isNoteController(ctx.caller, ctx.note.id) && !ctx.caller.skillCause?.chain.length)
+  if (!j(ctx.caller, ctx.note.id) && !ctx.caller.skillCause?.chain.length)
     throw Error("需要所属便笺或已登记联动的操作授权");
-  await ctx.db.put("handling", sha256(JSON.stringify([input.id, input.messageId])), input.handling);
+  await ctx.db.put("handling", q(JSON.stringify([input.id, input.messageId])), input.handling);
 });
 var initialize = note.action({ description: "准备并验证本机微信真实读取；保留已有会话，无订阅时仅启用文件传输助手，不启用AI事件。", receipt: "idempotent", input: object({}), output: object({ ready: boolean2(), selected: number2() }) }, async (ctx) => {
   await ctx.host.extensions.request("worka-wechat", "initialize", {});
@@ -7166,42 +6943,42 @@ var loadSnapshot = note.action({ visibility: "private", input: object({ query: _
       break;
   }
 });
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/saved-media.ts
-var SAVED_IMAGE_LIMITS = Object.freeze({ bytes: 512 * 1024, totalBytes: 2 * 1024 * 1024, count: 8, dimension: 1600 });
-var SAVED_FILE_LIMITS = Object.freeze({ bytes: 4 * 1024 * 1024, totalBytes: 8 * 1024 * 1024, count: 8 });
-// ../../worka-market-compat-plan-20261028/sdk/runtime/src/note-read-projection.ts
-var NOTE_READ_TAGS = ["div", "section", "article", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "dl", "dt", "dd", "blockquote", "pre", "code", "strong", "em", "s", "small", "span", "br", "hr", "table", "thead", "tbody", "tfoot", "tr", "th", "td", "figure", "figcaption"];
-var NOTE_READ_LIMITS = { nodes: 4096, depth: 32, text: 128 * 1024, bytes: 3 * 1024 * 1024 };
-var tags = new Set(NOTE_READ_TAGS);
+
+// .sdk/runtime/dist/internal.mjs
+var Ye = Object.freeze({ bytes: 524288, totalBytes: 2097152, count: 8, dimension: 1600 });
+var st = Object.freeze({ bytes: 4194304, totalBytes: 8388608, count: 8 });
+var ut = ["div", "section", "article", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "li", "dl", "dt", "dd", "blockquote", "pre", "code", "strong", "em", "s", "small", "span", "br", "hr", "table", "thead", "tbody", "tfoot", "tr", "th", "td", "figure", "figcaption"];
+var Nt = new Set(ut);
+
 // .build/sandbox-entry.mjs
 var workaSandboxABI = 3;
 var contract;
 async function dispatch(request, context) {
-  contract ??= describeCapabilities(exports_actions);
+  contract ??= me(exports_actions);
   if (request.method === "describe")
     return contract;
   if (request.method === "event") {
-    const definition = Object.values(exports_actions).map(capabilityDefinition).find((value) => value?.kind === "event" && value.name === request.name);
+    const definition = Object.values(exports_actions).map(c).find((value) => value?.kind === "event" && value.name === request.name);
     if (!definition)
       throw new Error("Undeclared note event: " + request.name);
     const value = await definition.output.parseAsync(request.input);
-    assertJson(value);
+    e(value);
     return value;
   }
   if (request.method === "validate") {
-    await validateNoteModel(note, context);
+    await ye(note, context);
     return null;
   }
   if (request.method === "check")
-    return checkNoteModel(note, request.name, context);
+    return be(note, request.name, context);
   if (request.method !== "execute")
     throw new Error("Unknown sandbox operation");
   const value = Object.hasOwn(exports_actions, request.name) ? exports_actions[request.name] : undefined;
-  const definition = capabilityDefinition(value);
+  const definition = c(value);
   if (!definition?.execute || definition.kind !== context.executionKind)
     throw new Error("Unknown operation or execution kind: " + request.name);
   const result = await definition.execute(request.input, context);
-  assertJson(result);
+  e(result);
   return result;
 }
 export {
