@@ -7,7 +7,7 @@ import {noteHref} from '@dsh-workbench/runtime';
 import {latestFirst} from './chat-order';
 import {useEffect,useLayoutEffect,useRef,useState,Fragment,type ReactNode} from 'react';
 import {Button,SearchField,ScrollShadow} from '@heroui/react';
-import {useNote,withNotePrerequisites,NoteIcon,NoteGuidance} from '@dsh-workbench/react';
+import {useNote,NoteIcon,NoteGuidance} from '@dsh-workbench/react';
 import type {Chat,Message} from './model';
 import {TaskResult} from './task';
 import '@heroui/styles/css';

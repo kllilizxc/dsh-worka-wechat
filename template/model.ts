@@ -14,7 +14,7 @@ export type Chat=z.infer<typeof chatSchema>;
 export type Message=z.infer<typeof messageSchema>;
 export type Inbox=z.infer<typeof inboxSchema>;
 // Business queries project selected chats from the provider; raw messages and credentials stay out of generic state.
-export const note=defineNote({collections:{handling:{schema:handlingSchema},reads:{schema:z.object({through:z.number().int().nonnegative()})}},update:{dataVersion:'wechat-native@3',compatibleFrom:['wechat-native@3']}});
+export const note=defineNote({collections:{handling:{schema:handlingSchema},reads:{schema:z.object({through:z.number().int().nonnegative()})}},update:{dataVersion:'wechat-native@3'}});
 
 export const relatedTaskSchema=z.object({noteId:z.string(),delegationId:z.string(),title:z.string(),status:z.string(),archived:z.boolean(),summary:z.string(),replySuggestion:z.string(),revision:z.string(),messageIds:z.array(z.string())});
 export type RelatedTask=z.infer<typeof relatedTaskSchema>;

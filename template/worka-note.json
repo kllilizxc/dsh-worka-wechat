@@ -1,4 +1,5 @@
 {
+  "version": "0.1.1",
   "providers": {
     "@realiz3r/worka-provider-wechat": {
       "range": "^0.1.8",
@@ -47,25 +48,30 @@
     "view-body.tsx",
     "view.tsx",
     "worka-source.json",
-    "worka-prebuilt/view-runtime-2qk05cyv.js",
     "worka-prebuilt/contract/references/types/model.d.ts",
+    "worka-prebuilt/contract/references/types/view-body.d.ts",
+    "worka-prebuilt/contract/references/types/route-search.d.ts",
+    "worka-prebuilt/contract/references/types/task.d.ts",
+    "worka-prebuilt/contract/references/types/view.d.ts",
+    "worka-prebuilt/contract/references/types/published-query.d.ts",
+    "worka-prebuilt/contract/references/types/record-links.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
     "worka-prebuilt/contract/references/types/chat-order.d.ts",
+    "worka-prebuilt/contract/references/types/routes.d.ts",
     "worka-prebuilt/contract/references/api.d.ts",
     "worka-prebuilt/contract/SKILL.md",
     "worka-prebuilt/contract/manifest.json",
     "worka-prebuilt/zod-config.mjs",
     "worka-prebuilt/index.html",
     "worka-prebuilt/entry-bundle.js",
-    "worka-prebuilt/routes-3mhva7sw.js",
+    "worka-prebuilt/routes-71f9w0z7.js",
+    "worka-prebuilt/view-runtime-57ccjbv6.js",
     "worka-prebuilt/view-runtime.mjs",
-    "worka-prebuilt/entry-et15myh8.js",
+    "worka-prebuilt/entry-ybyz4kqz.js",
     "worka-prebuilt/entry-bundle.tailwind.css",
-    "worka-prebuilt/entry-efvarq1r.js",
-    "worka-prebuilt/view-bsg23aaw.js",
-    "worka-prebuilt/entry-8b6wgr8c.js",
     "worka-prebuilt/actions.mjs",
     "worka-prebuilt/entry-bundle.css",
+    "worka-prebuilt/view-jfjnx387.js",
     "worka-prebuilt/manifest.json"
   ]
 }
