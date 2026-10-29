@@ -21,7 +21,6 @@ __export(exports_actions, {
   sessions: () => sessions,
   selectChats: () => selectChats,
   saveHandling: () => saveHandling,
-  routing: () => routing,
   related: () => related,
   refresh: () => refresh,
   recordHandling: () => recordHandling,
@@ -36,9 +35,18 @@ __export(exports_actions, {
   connection: () => connection,
   chats: () => chats,
   changed: () => changed,
-  autoConfigure: () => autoConfigure,
+  batch: () => batch,
   advanceReadCursor: () => advanceReadCursor
 });
+
+// batch.ts
+function selectBatch(messages, fromMessageId, messageId) {
+  const start = fromMessageId === null ? -1 : messages.findIndex((message) => message.id === fromMessageId);
+  const end = messages.findIndex((message) => message.id === messageId);
+  if (fromMessageId !== null && start < 0 || end <= start)
+    throw Error("消息批次边界不在缓存中，无法安全判断本批新增消息。");
+  return messages.slice(start + 1, end + 1);
+}
 
 // chat-order.ts
 var unreadSince = (messages, readThrough) => messages.at(-1)?.fromMe !== true && messages.some((message) => !message.fromMe && Number(message.id) > readThrough);
@@ -20142,7 +20150,7 @@ var inboxSchema = exports_external.object({
   nextRunAt: exports_external.number().nullable(),
   chats: exports_external.array(chatSchema.extend({ count: exports_external.number(), latest: messageSchema.nullable(), unread: exports_external.boolean() }))
 });
-var statusSchema = exports_external.object({ enabled: exports_external.boolean(), paused: exports_external.boolean(), error: exports_external.string().nullable(), nextRunAt: exports_external.number().nullable(), selectedCount: exports_external.number().int().nonnegative(), authorized: exports_external.boolean(), automatic: exports_external.boolean(), since: exports_external.number() });
+var statusSchema = exports_external.object({ enabled: exports_external.boolean(), paused: exports_external.boolean(), error: exports_external.string().nullable(), nextRunAt: exports_external.number().nullable(), selectedCount: exports_external.number().int().nonnegative() });
 var note = defineNote({ collections: { handling: { schema: handlingSchema }, reads: { schema: exports_external.object({ through: exports_external.number().int().nonnegative() }) } }, update: { dataVersion: "wechat-native@3" } });
 var relatedTaskSchema = exports_external.object({ noteId: exports_external.string(), delegationId: exports_external.string(), title: exports_external.string(), status: exports_external.string(), archived: exports_external.boolean(), summary: exports_external.string(), replySuggestion: exports_external.string(), revision: exports_external.string(), messageIds: exports_external.array(exports_external.string()) });
 
@@ -20158,17 +20166,11 @@ async function readResource(ctx, name, input2 = {}) {
 async function getStatus(ctx) {
   return readResource(ctx, "extension.worka-wechat.status");
 }
-async function getEvents(ctx) {
-  return readResource(ctx, "extension.worka-wechat.events");
-}
 async function getChats(ctx) {
   return readResource(ctx, "extension.worka-wechat.chats");
 }
 async function getMessages(ctx, chatId) {
   return readResource(ctx, "extension.worka-wechat.messages", { chatId });
-}
-async function authorizedMessages(ctx, id) {
-  return getMessages(ctx, id);
 }
 async function handled(ctx, id, messages) {
   return Promise.all(messages.map(async (message) => {
@@ -20190,16 +20192,13 @@ var status = note.query({
   input: exports_external.object({}),
   output: statusSchema
 }, async (ctx) => {
-  const [status2, events] = await Promise.all([getStatus(ctx), getEvents(ctx)]);
+  const status2 = await getStatus(ctx);
   return {
     enabled: status2.enabled,
     paused: status2.paused,
     error: status2.issue?.message ?? null,
     nextRunAt: null,
-    selectedCount: status2.selected,
-    authorized: events.since > 0,
-    automatic: events.enabled,
-    since: events.since
+    selectedCount: status2.selected
   };
 });
 var chats = note.query({
@@ -20237,12 +20236,6 @@ var related = note.query({
     }];
   });
 });
-var routing = note.query({
-  visibility: "public",
-  description: "兼容旧版连线的事件状态查询；已选会话始终发布新消息。",
-  input: exports_external.object({}),
-  output: exports_external.object({ enabled: exports_external.boolean(), since: exports_external.number() })
-}, getEvents);
 var item = note.query({
   visibility: "public",
   description: "读取指定已选会话的最新消息、本地处理反馈及稳定修订。",
@@ -20251,7 +20244,7 @@ var item = note.query({
   objectRef: "/item/id",
   revision: "/revision"
 }, async (ctx, input2) => {
-  const { chat, messages } = await authorizedMessages(ctx, input2.id);
+  const { chat, messages } = await getMessages(ctx, input2.id);
   const withFeedback = await handled(ctx, input2.id, messages);
   const latest = withFeedback.at(-1) ?? null;
   if (!latest && !(await getChats(ctx)).chats.some((row) => row.id === input2.id))
@@ -20264,8 +20257,17 @@ var context = note.query({
   input: exports_external.object({ id: exports_external.string() }),
   output: exports_external.object({ chat: chatSchema, messages: exports_external.array(messageSchema) })
 }, async (ctx, input2) => {
-  const { chat, messages } = await authorizedMessages(ctx, input2.id);
+  const { chat, messages } = await getMessages(ctx, input2.id);
   return { chat, messages: await handled(ctx, input2.id, messages) };
+});
+var batch = note.query({
+  visibility: "public",
+  description: "按事件的起止消息 ID 读取本批新增消息，不包含起点、包含终点；缺失边界时拒绝推断。",
+  input: exports_external.object({ id: exports_external.string(), fromMessageId: exports_external.string().nullable(), messageId: exports_external.string() }),
+  output: exports_external.object({ chat: chatSchema, messages: exports_external.array(messageSchema) })
+}, async (ctx, input2) => {
+  const { chat, messages } = await getMessages(ctx, input2.id);
+  return { chat, messages: await handled(ctx, input2.id, selectBatch(messages, input2.fromMessageId, input2.messageId)) };
 });
 var inbox = note.query({
   visibility: "private",
@@ -20314,14 +20316,6 @@ var refresh = note.action({
 }, async (ctx) => {
   const result = await ctx.host.extensions.request("worka-wechat", "refresh", {});
   return { refreshed: result.refreshed };
-});
-var autoConfigure = note.action({
-  description: "兼容旧版客户端的事件配置接口；已选会话始终发布新消息。",
-  input: exports_external.object({ enabled: exports_external.boolean() }),
-  output: exports_external.object({ enabled: exports_external.boolean(), since: exports_external.number() })
-}, async (ctx, input2) => {
-  await ctx.host.extensions.request("worka-wechat", "events", input2);
-  return readResource(ctx, "extension.worka-wechat.events");
 });
 var recordHandling = note.action({
   visibility: "public",
@@ -20379,7 +20373,7 @@ var initialize = note.action({ description: "准备并验证本机微信真实�
   const status2 = await ctx.host.extensions.request("worka-wechat", "status", {});
   return { ready: status2.ready, selected: status2.selected };
 });
-var changed = note.event({ visibility: "public", name: "items.changed", description: "已选微信会话出现新消息（包括本人消息和媒体类型）；根据稳定会话与消息 ID 按需读取。", objectRef: "/itemId", objectLabel: "/title", revision: "/revision", payload: exports_external.object({ itemId: exports_external.string(), chatId: exports_external.string().optional(), title: exports_external.string(), messageId: exports_external.string(), revision: exports_external.string() }) });
+var changed = note.event({ visibility: "public", name: "items.changed", description: "已选微信会话出现新消息（包括本人消息和媒体类型）；根据稳定会话与消息 ID 按需读取。", objectRef: "/itemId", objectLabel: "/title", revision: "/revision", payload: exports_external.object({ itemId: exports_external.string(), chatId: exports_external.string().optional(), title: exports_external.string(), fromMessageId: exports_external.string().nullable(), messageId: exports_external.string(), revision: exports_external.string() }) });
 var markRead = note.action({ visibility: "private", description: "记录本便笺中已查看的消息位置，不改变微信客户端已读状态。", input: exports_external.object({ chatId: exports_external.string(), messageId: exports_external.string().regex(/^\d+$/) }), output: exports_external.object({ readThrough: exports_external.number() }) }, async (ctx, input2) => {
   const snapshot = await ctx.resources.read({ name: "extension.worka-wechat.messages", input: { chatId: input2.chatId } });
   if (snapshot.error || !snapshot.data)
@@ -20394,7 +20388,7 @@ var advanceReadCursor = note.mutation({ visibility: "private", input: exports_ex
   await ctx.db.put("reads", input2.chatId, { through: readThrough });
   return { readThrough };
 });
-var loadSnapshot = note.action({ visibility: "private", input: exports_external.object({ query: exports_external.enum(["connection", "status", "chats", "related", "routing", "item", "context", "inbox", "messages", "sessions"]), input: exports_external.json().default({}), refresh: exports_external.boolean().optional() }) }, async (ctx, input2) => {
+var loadSnapshot = note.action({ visibility: "private", input: exports_external.object({ query: exports_external.enum(["connection", "status", "chats", "related", "item", "context", "batch", "inbox", "messages", "sessions"]), input: exports_external.json().default({}), refresh: exports_external.boolean().optional() }) }, async (ctx, input2) => {
   const value = input2.input;
   const read = async (name, parameters = {}) => {
     const request = { name: "extension.worka-wechat." + name, input: parameters };
@@ -20409,10 +20403,6 @@ var loadSnapshot = note.action({ visibility: "private", input: exports_external.
       break;
     case "status":
       await read("status");
-      await read("events");
-      break;
-    case "routing":
-      await read("events");
       break;
     case "chats":
       await read("chats");
@@ -20432,8 +20422,6 @@ var loadSnapshot = note.action({ visibility: "private", input: exports_external.
     default:
       await read("messages", { chatId: value.id ?? "" });
       await read("chats");
-      if (input2.query === "item" || input2.query === "context")
-        await read("events");
       break;
   }
 });

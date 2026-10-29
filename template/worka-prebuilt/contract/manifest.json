@@ -1,11 +1,12 @@
 {
   "schemaVersion": 1,
-  "codeVersion": "candidate",
+  "codeVersion": "0.1.3",
   "status": "ready",
   "files": [
     "SKILL.md",
     "references/api.d.ts",
     "references/types/actions.d.ts",
+    "references/types/batch.d.ts",
     "references/types/chat-order.d.ts",
     "references/types/model.d.ts"
   ],

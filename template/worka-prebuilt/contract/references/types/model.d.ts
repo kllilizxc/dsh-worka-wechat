@@ -102,9 +102,6 @@ export declare const statusSchema: z.ZodObject<{
     error: z.ZodNullable<z.ZodString>;
     nextRunAt: z.ZodNullable<z.ZodNumber>;
     selectedCount: z.ZodNumber;
-    authorized: z.ZodBoolean;
-    automatic: z.ZodBoolean;
-    since: z.ZodNumber;
 }, z.core.$strip>;
 export type Chat = z.infer<typeof chatSchema>;
 export type Message = z.infer<typeof messageSchema>;

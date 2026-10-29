@@ -3,7 +3,7 @@
   "providers": {
     "@realiz3r/worka-provider-wechat": {
       "range": "^0.1.10",
-      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/10d6fad51c2ee31e28b833d843300c8295c5aabd/releases/wechat/0.1.10/any"
+      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/6fde93f7d4034eb41b0aecfcc8a06bb450b80502/releases/wechat/0.1.10/any"
     }
   },
   "prerequisites": [
@@ -53,8 +53,10 @@
     "view-body.tsx",
     "view.tsx",
     "worka-source.json",
+    "batch.ts",
     "worka-prebuilt/entry-nfjt25qb.js",
     "worka-prebuilt/contract/references/types/model.d.ts",
+    "worka-prebuilt/contract/references/types/batch.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
     "worka-prebuilt/contract/references/types/chat-order.d.ts",
     "worka-prebuilt/contract/references/api.d.ts",

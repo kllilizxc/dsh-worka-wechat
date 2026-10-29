@@ -9,7 +9,7 @@ export const handlingSchema=z.object({
 export const messageSchema=z.object({id:z.string(),time:z.number(),sender:z.string(),text:z.string(),kind:z.string(),fromMe:z.boolean(),handling:handlingSchema.optional()});
 export const inboxSchema=z.object({enabled:z.boolean(),paused:z.boolean(),error:z.string().nullable(),nextRunAt:z.number().nullable(),
   chats:z.array(chatSchema.extend({count:z.number(),latest:messageSchema.nullable(),unread:z.boolean()}))});
-export const statusSchema=z.object({enabled:z.boolean(),paused:z.boolean(),error:z.string().nullable(),nextRunAt:z.number().nullable(),selectedCount:z.number().int().nonnegative(),authorized:z.boolean(),automatic:z.boolean(),since:z.number()});
+export const statusSchema=z.object({enabled:z.boolean(),paused:z.boolean(),error:z.string().nullable(),nextRunAt:z.number().nullable(),selectedCount:z.number().int().nonnegative()});
 export type Chat=z.infer<typeof chatSchema>;
 export type Message=z.infer<typeof messageSchema>;
 export type Inbox=z.infer<typeof inboxSchema>;
