@@ -10,9 +10,6 @@ export declare const status: import("@dsh-workbench/runtime").NoteOperation<z.Zo
     error: z.ZodNullable<z.ZodString>;
     nextRunAt: z.ZodNullable<z.ZodNumber>;
     selectedCount: z.ZodNumber;
-    authorized: z.ZodBoolean;
-    automatic: z.ZodBoolean;
-    since: z.ZodNumber;
 }, z.core.$strip>, "query">;
 export declare const chats: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{
     query: z.ZodOptional<z.ZodString>;
@@ -39,10 +36,6 @@ export declare const related: import("@dsh-workbench/runtime").NoteOperation<z.Z
     revision: z.ZodString;
     messageIds: z.ZodArray<z.ZodString>;
 }, z.core.$strip>>, "query">;
-export declare const routing: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{}, z.core.$strip>, z.ZodObject<{
-    enabled: z.ZodBoolean;
-    since: z.ZodNumber;
-}, z.core.$strip>, "query">;
 export declare const item: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{
     id: z.ZodString;
 }, z.core.$strip>, z.ZodObject<{
@@ -86,6 +79,47 @@ export declare const item: import("@dsh-workbench/runtime").NoteOperation<z.ZodO
 }, z.core.$strip>, "query">;
 export declare const context: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{
     id: z.ZodString;
+}, z.core.$strip>, z.ZodObject<{
+    chat: z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        type: z.ZodEnum<{
+            group: "group";
+            private: "private";
+        }>;
+    }, z.core.$strip>;
+    messages: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        time: z.ZodNumber;
+        sender: z.ZodString;
+        text: z.ZodString;
+        kind: z.ZodString;
+        fromMe: z.ZodBoolean;
+        handling: z.ZodOptional<z.ZodObject<{
+            status: z.ZodEnum<{
+                followed: "followed";
+                skipped: "skipped";
+            }>;
+            reason: z.ZodString;
+            task: z.ZodOptional<z.ZodObject<{
+                noteId: z.ZodString;
+                objectId: z.ZodString;
+            }, z.core.$strip>>;
+            taskTitle: z.ZodOptional<z.ZodString>;
+            taskStatus: z.ZodOptional<z.ZodString>;
+            taskArchived: z.ZodOptional<z.ZodBoolean>;
+            taskSummary: z.ZodOptional<z.ZodString>;
+            taskRevision: z.ZodOptional<z.ZodString>;
+            sessionId: z.ZodOptional<z.ZodString>;
+            replySuggestion: z.ZodOptional<z.ZodString>;
+            recordedAt: z.ZodNumber;
+        }, z.core.$strip>>;
+    }, z.core.$strip>>;
+}, z.core.$strip>, "query">;
+export declare const batch: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{
+    id: z.ZodString;
+    fromMessageId: z.ZodNullable<z.ZodString>;
+    messageId: z.ZodString;
 }, z.core.$strip>, z.ZodObject<{
     chat: z.ZodObject<{
         id: z.ZodString;
@@ -239,12 +273,6 @@ export declare const selectChats: import("@dsh-workbench/runtime").NoteOperation
 export declare const refresh: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{}, z.core.$strip>, z.ZodObject<{
     refreshed: z.ZodBoolean;
 }, z.core.$strip>, "action">;
-export declare const autoConfigure: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{
-    enabled: z.ZodBoolean;
-}, z.core.$strip>, z.ZodObject<{
-    enabled: z.ZodBoolean;
-    since: z.ZodNumber;
-}, z.core.$strip>, "action">;
 export declare const recordHandling: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{
     id: z.ZodString;
     messageId: z.ZodString;
@@ -318,6 +346,7 @@ export declare const changed: Readonly<import("@dsh-workbench/runtime").NoteEven
     itemId: z.ZodString;
     chatId: z.ZodOptional<z.ZodString>;
     title: z.ZodString;
+    fromMessageId: z.ZodNullable<z.ZodString>;
     messageId: z.ZodString;
     revision: z.ZodString;
 }, z.core.$strip>>>;
@@ -335,6 +364,7 @@ export declare const advanceReadCursor: import("@dsh-workbench/runtime").NoteOpe
 }, z.core.$strip>, "mutation">;
 export declare const loadSnapshot: import("@dsh-workbench/runtime").NoteOperation<z.ZodObject<{
     query: z.ZodEnum<{
+        batch: "batch";
         chats: "chats";
         connection: "connection";
         context: "context";
@@ -342,7 +372,6 @@ export declare const loadSnapshot: import("@dsh-workbench/runtime").NoteOperatio
         item: "item";
         messages: "messages";
         related: "related";
-        routing: "routing";
         sessions: "sessions";
         status: "status";
     }>;

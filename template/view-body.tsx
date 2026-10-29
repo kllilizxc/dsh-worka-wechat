@@ -56,7 +56,6 @@ function View(){
   const connection=usePublishedQuery('connection',{});
   const initialized=connection.data?.initialized===true;
   const inbox=usePublishedQuery('inbox',{},{enabled:initialized});
-  const routing=usePublishedQuery('routing',{},{enabled:initialized});
   const data=inbox.data;
   const chats=latestFirst(data?.chats??[]);
   const messages=usePublishedQuery('messages',{chatId:selected??chats[0]?.id??''},{enabled:initialized&&mode==='expanded'&&!managing&&!!(selected??chats[0]?.id)});
@@ -85,7 +84,7 @@ function View(){
   },[mode,managing,selected,layout.width,chat?.id,lastMessage?.id,messages.loading,messages.stale,messages.error,actions]);
   const enabled=data?.enabled===true;
   const status=data?.paused?'已暂停':data?.error?'读取受阻':enabled?'读取中':'已暂停';
-  const failure=error||inbox.error?.message||routing.error?.message||data?.error||'';
+  const failure=error||inbox.error?.message||data?.error||'';
   const chosen=pending??chats.map(({id,name,type})=>({id,name,type}));
   const run=async(work:()=>Promise<unknown>)=>{setBusy(true);setError('');try{await work();}catch(cause){setError(cause instanceof Error?cause.message:'操作失败，请重试。');}finally{setBusy(false);}};
   const manage=()=>{setPending(null);setManaging(true);};
@@ -97,7 +96,7 @@ function View(){
     <header>{identity}<span className="wechat-status">{connection.loading?'检查连接中':'等待连接'}</span></header>
     <NoteGuidance title={connection.error?'无法检查微信连接':'连接本机微信'}
       description={error||connection.error?.message||'登录这台 Mac 的微信后完成初始化，已有会话和消息会保留。'}
-      action={{label:busy?'正在初始化…':'初始化微信',onPress:()=>{if(!busy)void run(async()=>{await actions.initialize({});await connection.refresh();await inbox.refresh();await routing.refresh();});}}}
+      action={{label:busy?'正在初始化…':'初始化微信',onPress:()=>{if(!busy)void run(async()=>{await actions.initialize({});await connection.refresh();await inbox.refresh();});}}}
       secondary={{label:'查看设置指引',onPress:()=>host.openSetup()}}/>
   </section>;
 
@@ -115,7 +114,6 @@ function View(){
       <span className={'wechat-status '+(failure?'error':'')}>{status}</span>
       <Button variant="ghost" isDisabled={busy} onPress={()=>run(()=>actions.setEnabled({enabled:!enabled}))}>{enabled?'暂停读取':'恢复读取'}</Button>
       <Button variant="ghost" isDisabled={busy||!enabled||data?.paused||!chats.length} onPress={()=>run(()=>actions.refresh({}))}>刷新</Button>
-      <Button variant="ghost" isDisabled={busy||routing.loading||!!routing.error} onPress={()=>run(()=>actions.autoConfigure({enabled:routing.data?.enabled!==true}))}>{routing.data?.enabled?'暂停 AI 处理':'开启 AI 处理'}</Button>
       <Button variant="secondary" isDisabled={busy} onPress={manage}>选择会话</Button>
     </div></header>
     {failure&&<div className="wechat-error" role="alert"><span>{failure}</span><Button size="sm" variant="ghost" isDisabled={busy} onPress={()=>run(async()=>{await actions.refresh({});await inbox.refresh();})}>重试</Button></div>}

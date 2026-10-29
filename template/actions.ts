@@ -1,3 +1,4 @@
+import { selectBatch } from './batch';
 import { unreadSince, advanceRead } from './chat-order';
 import { z,sha256,isNoteController } from '@dsh-workbench/runtime';
 import { note, chatSchema, messageSchema, inboxSchema, handlingSchema, relatedTaskSchema, statusSchema } from './model';
@@ -23,21 +24,12 @@ async function getStatus(ctx: Context) {
   }>(ctx, 'extension.worka-wechat.status');
 }
 
-async function getEvents(ctx: Context) {
-  return readResource<{ enabled: boolean; since: number }>(ctx, 'extension.worka-wechat.events');
-}
-
 async function getChats(ctx: Context) {
   return readResource<{ chats: Array<Chat & { count: number; latest: Message | null }> }>(ctx, 'extension.worka-wechat.chats');
 }
 
 async function getMessages(ctx: Context, chatId: string) {
   return readResource<{ chat: Chat; messages: Message[]; updatedAt: number | null }>(ctx, 'extension.worka-wechat.messages', { chatId });
-}
-
-async function authorizedMessages(ctx: Context,id:string){
- const events=await getEvents(ctx);if(!events.since)throw Error('请先授权微信消息进入 AI 连线。');
- const result=await getMessages(ctx,id);return {...result,messages:result.messages.filter(message=>message.time*1000>=events.since)};
 }
 
 async function handled(ctx: import('@dsh-workbench/runtime').NoteQueryContext<typeof note>, id: string, messages: Message[]) {
@@ -58,15 +50,14 @@ export const connection=note.query({
   });
 
 export const status=note.query({
-    visibility: 'public', description: '读取本机微信状态、暂停、会话数量及消息自动处理授权；不读取消息。',
+    visibility: 'public', description: '读取本机微信状态、暂停状态和会话数量；不读取消息。',
     input: z.object({}), output: statusSchema,
   }, async ctx => {
-    const [status, events] = await Promise.all([getStatus(ctx), getEvents(ctx)]);
+    const status = await getStatus(ctx);
     return {
       enabled: status.enabled, paused: status.paused,
       error: status.issue?.message ?? null, nextRunAt: null,
-      selectedCount: status.selected, authorized: events.since > 0,
-      automatic: events.enabled, since: events.since,
+      selectedCount: status.selected,
     };
   });
 
@@ -98,18 +89,13 @@ export const related=note.query({
     });
   });
 
-export const routing=note.query({
-    visibility: 'public', description: '读取本便笺未来微信消息事件订阅与首次启用时间。',
-    input: z.object({}), output: z.object({ enabled: z.boolean(), since: z.number() }),
-  }, getEvents);
-
 export const item=note.query({
-    visibility: 'public', description: '读取指定已选会话在AI授权起点后的最新消息、本地处理反馈及稳定修订。',
+    visibility: 'public', description: '读取指定已选会话的最新消息、本地处理反馈及稳定修订。',
     input: z.object({ id: z.string() }),
     output: z.object({ item: z.object({ id: z.string(), title: z.string(), type: z.enum(['private', 'group']), latest: messageSchema.nullable(), messageIds: z.array(z.string()) }), revision: z.string() }),
     objectRef: '/item/id', revision: '/revision',
   }, async (ctx, input) => {
-    const { chat, messages } = await authorizedMessages(ctx, input.id);
+    const { chat, messages } = await getMessages(ctx, input.id);
     const withFeedback = await handled(ctx, input.id, messages);
     const latest = withFeedback.at(-1) ?? null;
     if (!latest && !(await getChats(ctx)).chats.some(row => row.id === input.id)) throw new Error('该会话未由当前便笺选择。');
@@ -117,11 +103,20 @@ export const item=note.query({
   });
 
 export const context=note.query({
-    visibility: 'public', description: '读取指定已选微信会话在AI授权起点后的消息和本地处理反馈，供已授权连线核对上下文。',
+    visibility: 'public', description: '读取指定已选微信会话的消息和本地处理反馈，供已授权连线核对上下文。',
     input: z.object({ id: z.string() }), output: z.object({ chat: chatSchema, messages: z.array(messageSchema) }),
   }, async (ctx, input) => {
-    const { chat, messages } = await authorizedMessages(ctx, input.id);
+    const { chat, messages } = await getMessages(ctx, input.id);
     return { chat, messages: await handled(ctx, input.id, messages) };
+  });
+
+export const batch=note.query({
+    visibility: 'public', description: '按事件的起止消息 ID 读取本批新增消息，不包含起点、包含终点；缺失边界时拒绝推断。',
+    input: z.object({ id: z.string(), fromMessageId: z.string().nullable(), messageId: z.string() }),
+    output: z.object({ chat: chatSchema, messages: z.array(messageSchema) }),
+  }, async (ctx, input) => {
+    const { chat, messages } = await getMessages(ctx, input.id);
+    return { chat, messages: await handled(ctx, input.id, selectBatch(messages, input.fromMessageId, input.messageId)) };
   });
 
 export const inbox=note.query({
@@ -170,14 +165,6 @@ export const refresh = note.action({
   return { refreshed: result.refreshed };
 });
 
-export const autoConfigure = note.action({
-  description: '在本便笺中启用或暂停未来微信消息事件。启用时 provider 固定新的时间基线，不重放此前缓存。',
-  input: z.object({ enabled: z.boolean() }), output: z.object({ enabled: z.boolean(), since: z.number() }),
-}, async (ctx, input) => {
-  await ctx.host.extensions.request('worka-wechat', 'events', input);
-  return readResource(ctx, 'extension.worka-wechat.events');
-});
-
 export const recordHandling = note.action({
   visibility: 'public', description: '将连线核实的微信消息处理结果存入本便笺；只保存本地回执，不分发任务或发送微信消息。',
   objectRef: '/itemId',
@@ -216,12 +203,12 @@ export const saveHandling=note.mutation({visibility:'private',input:z.object({id
  if(!isNoteController(ctx.caller,ctx.note.id)&&!ctx.caller.skillCause?.chain.length)throw Error('需要所属便笺或已登记联动的操作授权');
  await ctx.db.put('handling',sha256(JSON.stringify([input.id,input.messageId])),input.handling);
 });
-export const initialize=note.action({description:'准备并验证本机微信真实读取；保留已有会话，无订阅时仅启用文件传输助手，不启用AI事件。',receipt:'idempotent',input:z.object({}),output:z.object({ready:z.boolean(),selected:z.number()})},async ctx=>{
+export const initialize=note.action({description:'准备并验证本机微信真实读取；保留已有会话，无会话选择时接入文件传输助手。',receipt:'idempotent',input:z.object({}),output:z.object({ready:z.boolean(),selected:z.number()})},async ctx=>{
  await ctx.host.extensions.request('worka-wechat','initialize',{});
  const status=await ctx.host.extensions.request('worka-wechat','status',{}) as {ready:boolean;selected:number};
  return {ready:status.ready,selected:status.selected};
 });
-export const changed=note.event({visibility:'public',name:'items.changed',description:'已授权已选微信会话出现新文字消息；根据稳定会话与消息 ID 按需读取。',objectRef:'/itemId',objectLabel:'/title',revision:'/revision',payload:z.object({itemId:z.string(),chatId:z.string().optional(),title:z.string(),messageId:z.string(),revision:z.string()})});
+export const changed=note.event({visibility:'public',name:'items.changed',description:'已选微信会话出现新消息（包括本人消息和媒体类型）；根据稳定会话与消息 ID 按需读取。',objectRef:'/itemId',objectLabel:'/title',revision:'/revision',payload:z.object({itemId:z.string(),chatId:z.string().optional(),title:z.string(),fromMessageId:z.string().nullable(),messageId:z.string(),revision:z.string()})});
 
 export const markRead=note.action({visibility:'private',description:'记录本便笺中已查看的消息位置，不改变微信客户端已读状态。',input:z.object({chatId:z.string(),messageId:z.string().regex(/^\d+$/)}),output:z.object({readThrough:z.number()})},async(ctx,input)=>{
   const snapshot=await ctx.resources.read({name:'extension.worka-wechat.messages',input:{chatId:input.chatId}});
@@ -237,7 +224,7 @@ export const advanceReadCursor=note.mutation({visibility:'private',input:z.objec
 });
 
 
-export const loadSnapshot=note.action({visibility:'private',input:z.object({query:z.enum(['connection','status','chats','related','routing','item','context','inbox','messages','sessions']),input:z.json().default({}),refresh:z.boolean().optional()})},async(ctx,input)=>{
+export const loadSnapshot=note.action({visibility:'private',input:z.object({query:z.enum(['connection','status','chats','related','item','context','batch','inbox','messages','sessions']),input:z.json().default({}),refresh:z.boolean().optional()})},async(ctx,input)=>{
  const value=input.input as {id?:string;chatId?:string;keyword?:string;offset?:number};
  const read=async(name:string,parameters:Record<string,string|number>={})=>{
   const request={name:'extension.worka-wechat.'+name,input:parameters};
@@ -246,8 +233,7 @@ export const loadSnapshot=note.action({visibility:'private',input:z.object({quer
  };
  switch(input.query){
   case 'connection':await read('status');break;
-  case 'status':await read('status');await read('events');break;
-  case 'routing':await read('events');break;
+  case 'status':await read('status');break;
   case 'chats':await read('chats');break;
   case 'sessions':await read('sessions',{keyword:value.keyword??'',offset:value.offset??0});break;
   case 'inbox':{
@@ -255,6 +241,6 @@ export const loadSnapshot=note.action({visibility:'private',input:z.object({quer
    await Promise.all(result.chats.map(chat=>read('messages',{chatId:chat.id})));break;
   }
   case 'messages':await read('messages',{chatId:value.chatId??''});break;
-  default:await read('messages',{chatId:value.id??''});await read('chats');if(input.query==='item'||input.query==='context')await read('events');break;
+  default:await read('messages',{chatId:value.id??''});await read('chats');break;
  }
 });
