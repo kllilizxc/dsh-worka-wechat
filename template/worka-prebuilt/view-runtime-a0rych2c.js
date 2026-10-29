@@ -1,0 +1,1 @@
+import"./entry-nfjt25qb.js";import{mountWidget as t}from"@dsh-workbench/react/internal";import{setLocale as L,DEFAULT_LOCALE as m}from"@dsh-workbench/runtime/view";export{L as setLocale,t as mountWidget,m as DEFAULT_LOCALE};

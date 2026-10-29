@@ -35,10 +35,7 @@ async function getMessages(ctx: Context, chatId: string) {
   return readResource<{ chat: Chat; messages: Message[]; updatedAt: number | null }>(ctx, 'extension.worka-wechat.messages', { chatId });
 }
 
-async function authorizedMessages(ctx: Context,id:string){
- const events=await getEvents(ctx);if(!events.since)throw Error('请先授权微信消息进入 AI 连线。');
- const result=await getMessages(ctx,id);return {...result,messages:result.messages.filter(message=>message.time*1000>=events.since)};
-}
+async function authorizedMessages(ctx: Context,id:string){ return getMessages(ctx,id); }
 
 async function handled(ctx: import('@dsh-workbench/runtime').NoteQueryContext<typeof note>, id: string, messages: Message[]) {
   return Promise.all(messages.map(async message => {
@@ -99,12 +96,12 @@ export const related=note.query({
   });
 
 export const routing=note.query({
-    visibility: 'public', description: '读取本便笺未来微信消息事件订阅与首次启用时间。',
+    visibility: 'public', description: '兼容旧版连线的事件状态查询；已选会话始终发布新消息。',
     input: z.object({}), output: z.object({ enabled: z.boolean(), since: z.number() }),
   }, getEvents);
 
 export const item=note.query({
-    visibility: 'public', description: '读取指定已选会话在AI授权起点后的最新消息、本地处理反馈及稳定修订。',
+    visibility: 'public', description: '读取指定已选会话的最新消息、本地处理反馈及稳定修订。',
     input: z.object({ id: z.string() }),
     output: z.object({ item: z.object({ id: z.string(), title: z.string(), type: z.enum(['private', 'group']), latest: messageSchema.nullable(), messageIds: z.array(z.string()) }), revision: z.string() }),
     objectRef: '/item/id', revision: '/revision',
@@ -117,7 +114,7 @@ export const item=note.query({
   });
 
 export const context=note.query({
-    visibility: 'public', description: '读取指定已选微信会话在AI授权起点后的消息和本地处理反馈，供已授权连线核对上下文。',
+    visibility: 'public', description: '读取指定已选微信会话的消息和本地处理反馈，供已授权连线核对上下文。',
     input: z.object({ id: z.string() }), output: z.object({ chat: chatSchema, messages: z.array(messageSchema) }),
   }, async (ctx, input) => {
     const { chat, messages } = await authorizedMessages(ctx, input.id);
@@ -171,7 +168,7 @@ export const refresh = note.action({
 });
 
 export const autoConfigure = note.action({
-  description: '在本便笺中启用或暂停未来微信消息事件。启用时 provider 固定新的时间基线，不重放此前缓存。',
+  description: '兼容旧版客户端的事件配置接口；已选会话始终发布新消息。',
   input: z.object({ enabled: z.boolean() }), output: z.object({ enabled: z.boolean(), since: z.number() }),
 }, async (ctx, input) => {
   await ctx.host.extensions.request('worka-wechat', 'events', input);
@@ -216,12 +213,12 @@ export const saveHandling=note.mutation({visibility:'private',input:z.object({id
  if(!isNoteController(ctx.caller,ctx.note.id)&&!ctx.caller.skillCause?.chain.length)throw Error('需要所属便笺或已登记联动的操作授权');
  await ctx.db.put('handling',sha256(JSON.stringify([input.id,input.messageId])),input.handling);
 });
-export const initialize=note.action({description:'准备并验证本机微信真实读取；保留已有会话，无订阅时仅启用文件传输助手，不启用AI事件。',receipt:'idempotent',input:z.object({}),output:z.object({ready:z.boolean(),selected:z.number()})},async ctx=>{
+export const initialize=note.action({description:'准备并验证本机微信真实读取；保留已有会话，无会话选择时接入文件传输助手。',receipt:'idempotent',input:z.object({}),output:z.object({ready:z.boolean(),selected:z.number()})},async ctx=>{
  await ctx.host.extensions.request('worka-wechat','initialize',{});
  const status=await ctx.host.extensions.request('worka-wechat','status',{}) as {ready:boolean;selected:number};
  return {ready:status.ready,selected:status.selected};
 });
-export const changed=note.event({visibility:'public',name:'items.changed',description:'已授权已选微信会话出现新文字消息；根据稳定会话与消息 ID 按需读取。',objectRef:'/itemId',objectLabel:'/title',revision:'/revision',payload:z.object({itemId:z.string(),chatId:z.string().optional(),title:z.string(),messageId:z.string(),revision:z.string()})});
+export const changed=note.event({visibility:'public',name:'items.changed',description:'已选微信会话出现新消息（包括本人消息和媒体类型）；根据稳定会话与消息 ID 按需读取。',objectRef:'/itemId',objectLabel:'/title',revision:'/revision',payload:z.object({itemId:z.string(),chatId:z.string().optional(),title:z.string(),messageId:z.string(),revision:z.string()})});
 
 export const markRead=note.action({visibility:'private',description:'记录本便笺中已查看的消息位置，不改变微信客户端已读状态。',input:z.object({chatId:z.string(),messageId:z.string().regex(/^\d+$/)}),output:z.object({readThrough:z.number()})},async(ctx,input)=>{
   const snapshot=await ctx.resources.read({name:'extension.worka-wechat.messages',input:{chatId:input.chatId}});

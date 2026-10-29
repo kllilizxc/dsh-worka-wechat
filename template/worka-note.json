@@ -1,9 +1,9 @@
 {
-  "version": "0.1.2",
+  "version": "0.1.3",
   "providers": {
     "@realiz3r/worka-provider-wechat": {
-      "range": "^0.1.9",
-      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/d70fb24a6b530d760c29e24efdb8087249cde1c7/releases/wechat/0.1.9/any"
+      "range": "^0.1.10",
+      "source": "https://github.com/kllilizxc/worka-provider-wechat/tree/10d6fad51c2ee31e28b833d843300c8295c5aabd/releases/wechat/0.1.10/any"
     }
   },
   "prerequisites": [
@@ -17,7 +17,7 @@
     "steps": [
       "点击一键初始化，自动准备读取组件并验证文件传输助手。",
       "需要本机授权或扫码时，按系统提示完成。",
-      "连接后选择要读取的会话；AI 自动处理单独开启。"
+      "连接后选择要读取的会话；连线自行决定如何处理新消息。"
     ]
   },
   "schemaVersion": 2,
@@ -53,30 +53,23 @@
     "view-body.tsx",
     "view.tsx",
     "worka-source.json",
+    "worka-prebuilt/entry-nfjt25qb.js",
     "worka-prebuilt/contract/references/types/model.d.ts",
-    "worka-prebuilt/contract/references/types/view-body.d.ts",
-    "worka-prebuilt/contract/references/types/route-search.d.ts",
-    "worka-prebuilt/contract/references/types/task.d.ts",
-    "worka-prebuilt/contract/references/types/view.d.ts",
-    "worka-prebuilt/contract/references/types/published-query.d.ts",
-    "worka-prebuilt/contract/references/types/record-links.d.ts",
     "worka-prebuilt/contract/references/types/actions.d.ts",
     "worka-prebuilt/contract/references/types/chat-order.d.ts",
-    "worka-prebuilt/contract/references/types/routes.d.ts",
     "worka-prebuilt/contract/references/api.d.ts",
     "worka-prebuilt/contract/SKILL.md",
     "worka-prebuilt/contract/manifest.json",
     "worka-prebuilt/zod-config.mjs",
     "worka-prebuilt/index.html",
     "worka-prebuilt/entry-bundle.js",
-    "worka-prebuilt/routes-71f9w0z7.js",
-    "worka-prebuilt/view-runtime-57ccjbv6.js",
     "worka-prebuilt/view-runtime.mjs",
-    "worka-prebuilt/entry-ybyz4kqz.js",
     "worka-prebuilt/entry-bundle.tailwind.css",
+    "worka-prebuilt/view-9cbhxggh.js",
+    "worka-prebuilt/view-runtime-a0rych2c.js",
     "worka-prebuilt/actions.mjs",
     "worka-prebuilt/entry-bundle.css",
-    "worka-prebuilt/view-jfjnx387.js",
+    "worka-prebuilt/routes-7a3pcdbb.js",
     "worka-prebuilt/manifest.json"
   ]
 }
