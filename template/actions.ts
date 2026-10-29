@@ -50,7 +50,7 @@ export const connection=note.query({
   });
 
 export const status=note.query({
-    visibility: 'public', description: '读取本机微信状态、暂停、会话数量及消息自动处理授权；不读取消息。',
+    visibility: 'public', description: '读取本机微信状态、暂停状态和会话数量；不读取消息。',
     input: z.object({}), output: statusSchema,
   }, async ctx => {
     const status = await getStatus(ctx);

@@ -20188,7 +20188,7 @@ var connection = note.query({
 });
 var status = note.query({
   visibility: "public",
-  description: "读取本机微信状态、暂停、会话数量及消息自动处理授权；不读取消息。",
+  description: "读取本机微信状态、暂停状态和会话数量；不读取消息。",
   input: exports_external.object({}),
   output: statusSchema
 }, async (ctx) => {
