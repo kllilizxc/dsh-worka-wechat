@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {Button} from '@heroui/react';
+import {Button} from './ui-kit';
 import {QueryState,useLinks,useMutation,useNote} from '@dsh-workbench/react';
 
 /** Presentation only: the host owns the query and all association data. */
