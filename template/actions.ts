@@ -1,6 +1,6 @@
 import { selectBatch } from './batch';
 import { unreadSince, advanceRead } from './chat-order';
-import { z,sha256,isNoteController } from '@dsh-workbench/runtime';
+import { z,sha256 } from '@dsh-workbench/runtime';
 import { note, chatSchema, messageSchema, inboxSchema, handlingSchema, relatedTaskSchema, statusSchema } from './model';
 export { note } from './model';
 
@@ -177,7 +177,6 @@ export const recordHandling = note.action({
   }),
   output: z.object({ itemId: z.string(), messageId: z.string(), handling: handlingSchema }),
 }, async (ctx, input) => {
-  if(!isNoteController(ctx.caller,ctx.note.id)&&!ctx.caller.skillCause?.chain.length)throw Error('需要所属便笺或已登记联动的操作授权');
   const { messages } = await getMessages(ctx, input.id);
   const message = messages.find(row => row.id === input.messageId);
   if (!message) throw new Error('消息不属于当前已选微信会话，请重新读取来源。');
@@ -200,7 +199,6 @@ export const recordHandling = note.action({
 
 
 export const saveHandling=note.mutation({visibility:'private',input:z.object({id:z.string(),messageId:z.string(),handling:handlingSchema})},async(ctx,input)=>{
- if(!isNoteController(ctx.caller,ctx.note.id)&&!ctx.caller.skillCause?.chain.length)throw Error('需要所属便笺或已登记联动的操作授权');
  await ctx.db.put('handling',sha256(JSON.stringify([input.id,input.messageId])),input.handling);
 });
 export const initialize=note.action({description:'准备并验证本机微信真实读取；保留已有会话，无会话选择时接入文件传输助手。',receipt:'idempotent',input:z.object({}),output:z.object({ready:z.boolean(),selected:z.number()})},async ctx=>{

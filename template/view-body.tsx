@@ -6,11 +6,10 @@ import {useMatch,useNavigate,useSearchParams} from 'react-router';
 import {noteHref} from '@dsh-workbench/runtime';
 import {latestFirst} from './chat-order';
 import {useEffect,useLayoutEffect,useRef,useState,Fragment,type ReactNode} from 'react';
-import {Button,SearchField,ScrollShadow} from '@heroui/react';
+import {Button,SearchField,ScrollShadow} from './ui-kit';
 import {useNote,NoteIcon,NoteGuidance} from '@dsh-workbench/react';
 import type {Chat,Message} from './model';
 import {TaskResult} from './task';
-import '@heroui/styles/css';
 import './style.css';
 
 const text=(message:Message|null)=>message?(message.text||`[${({image:'图片',voice:'语音',video:'视频',sticker:'表情',file:'文件'} as Record<string,string>)[message.kind]??'非文字消息'}]`):'尚未读取消息';

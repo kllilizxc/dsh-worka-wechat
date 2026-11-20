@@ -2,7 +2,7 @@ import {useEffect,useState} from 'react';
 import {useNote} from '@dsh-workbench/react';
 
 import type {RelatedTask} from './model';
-import {Button} from '@heroui/react';
+import {Button} from './ui-kit';
 
 const labels:Record<string,string>={dispatching:'正在交办',running:'处理中',completed:'本轮结束',review:'待核对',blocked:'处理受阻','needs-input':'需要补充',paused:'已暂停',failed:'执行失败',cancelled:'已停止',unknown:'状态待核对'};
 
